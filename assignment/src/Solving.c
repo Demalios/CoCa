@@ -1,3 +1,5 @@
+/* A compléter en implémentant les fonctions. */
+
 #include "Solving.h"
 
 /**
