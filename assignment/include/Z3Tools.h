@@ -38,7 +38,7 @@ Z3_ast mk_bool_var(Z3_context ctx, const char * name);
 
 /**
  * @brief Tells if a formula is satisfiable, unsatisfiable, or cannot be decided.
- * Dis si une formule est satisfaisable, non-satisfaisable, ou si on ne peut pas le décider.
+ * Dit si une formule est satisfaisable, non-satisfaisable, ou si on ne peut pas le décider.
  * 
  * @param ctx, The context of the solver. Le contexte du solveur.
  * @param formula, The formula to check. La formule à vérifier.

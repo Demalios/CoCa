@@ -1,69 +1,80 @@
-/* A compléter en implémentant les fonctions. */
+#ifndef COCA_SOLVING_H_
+#define COCA_SOLVING_H_
 
-#include "Solving.h"
+#define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
 
-/**
- * @brief Generates a formula consisting of a variable representing the fact that @p node of graph number @p number is at position @p position of an accepting path.
- * 
- * @param ctx The solver context.
- * @param number The number of the graph.
- * @param position The position in the path.
- * @param k The mysterious k from the subject of this assignment.
- * @param node The node identifier.
- * @return Z3_ast The formula.
- */
-Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node);
+#include "Graph.h"
+#include <z3.h>
 
-/**
- * @brief Generates a SAT formula satisfiable if and only if all graphs of @p graphs contain an accepting path of length @p pathLength.
- * 
- * @param ctx The solver context.
- * @param graphs An array of graphs.
- * @param numGraphs The number of graphs in @p graphs.
- * @param pathLength The length of the path to check.
- * @return Z3_ast The formula.
- */
-Z3_ast graphsToPathFormula( Z3_context ctx, Graph *graphs,unsigned int numGraphs, int pathLength);
+// Génère une formule consistant en une variable représentant le fait que node du graphe number soit à la position position d'un chemin acceptant.
 
-/**
- * @brief Generates a SAT formula satisfiable if and only if all graphs of @p graphs contain an accepting path of common length.
- * 
- * @param ctx The solver context.
- * @param graphs An array of graphs.
- * @param numGraphs The number of graphs in @p graphs.
- * @return Z3_ast The formula.
- */
-Z3_ast graphsToFullFormula( Z3_context ctx, Graph *graphs,unsigned int numGraphs);
+Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node){
+    int greater = max(number,max(position,max(k,node)));
+    char str[log10(greater)+1];
+    sprintf(str, "%d", number); // à factoriser
+    char* name = strcat("x_",str);
+    sprintf(str, ",%d", position);
+    name = strcat(name,str);
+    sprintf(str, ",%d", k);
+    name = strcat(name,str);
+    sprintf(str, ",%d", node);
+    name = strcat(name,str);
+    return mk_bool_var(ctx, name); //son nom sera x_i,j,k,q
+}
 
-/**
- * @brief Gets the length of the solution from a given model.
- * 
- * @param ctx The solver context.
- * @param model A variable assignment.
- * @param graphs An array of graphs.
- * @return int The length of a common simple accepting path in all graphs from @p graphs.
- */ 
+
+
+// Génère une formule SAT satisfaisable si et seulement si tous les graphes de graphs contiennent un chemin acceptant de longueur pathLength.
+
+Z3_ast graphsToPathFormula( Z3_context ctx, Graph *graphs, unsigned int numGraphs, int pathLength);
+
+
+
+// Génère une formule SAT satisfaisable si et seulement si tous les graphes de graphs contiennent un chemin acceptant de longueur commune.
+
+// Z3_ast graphsToFullFormula( Z3_context ctx, Graph *graphs,unsigned int numGraphs) return graphsToPathFormula( ctx, graphs, numGraphs, commonLength);
+
+
+
+// Obtient la longueur de la solution d'un modèle donné.
+
 int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs);
 
-/**
- * @brief Displays the paths of length @p pathLength of each graphs in @p graphs described by @p model.
- * 
- * @param ctx The solver context.
- * @param model A variable assignment.
- * @param graphs An array of graphs.
- * @param numGraph The number of graphs in @p graphs.
- * @param pathLength The length of path.
- */
+
+
+// Affiche les chemins de longueur pathLength pour tous les graphes décrits dans model.
+
 void printPathsFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGraph, int pathLength);
 
-/**
- * @brief Creates the file ("%s-l%d.dot",name,pathLength) representing the solution to the problem described by @p model, or ("result-l%d.dot,pathLength") if name is NULL.
- * 
- * @param ctx The solver context.
- * @param model A variable assignment.
- * @param graphs An array of graphs.
- * @param numGraph The number of graphs in @p graphs.
- * @param pathLength The length of path.
- * @param name The name of the output file.
- */
+
+
+// Crée le fichier représentant la solution du problème décrit par model, ou ("result-l%d.dot,pathLength") si name == NULL
+
 void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGraph, int pathLength, char* name);
+
+#endif
+
+/*
+Minimum syndical : implémenter les fonctions getNodeVariable, getPathFormula
+et getFullFormula ainsi qu’un programme principal les utilisant pour résoudre le
+problème  en  explorant  chaque  longueur  indépendamment.  Il  pourra  afficher  la
+formule générée, ainsi que les graphes parsés via un système d’option.
+—  Pour avoir la moyenne : En plus, récupérer le chemin calculé et l’afficher sur le
+terminal, en implémentant la fonction printPathFromModels.
+—  Amélioration 1 : Implémenter getFullFormula, et modifier le main de manière à
+obtenir uniquement une réponse au problème (oui/non).
+—  Amélioration 2 : Modifier getFullFormula de manière à ce que si la formule admet
+un modèle, il contienne uniquement les chemins témoins de la solution. Vous aurez
+également besoin d’implémenter getSolutionLengthFromModel.
+—  Amélioration 3 : Implémenter createDotFromModel pour afficher les chemins solu-
+tion au format .dot (comme dans l’exécutable fourni). Il devra notamment contenir
+les informations de sommets sources et destination. Vous pouvez utiliser les cou-
+leurs  de  votre  choix,  mais  nous  serons  content  si  vous  respecter  le  même  code
+couleur que nous.
+—  Amélioration 4 : Produire un exécutable avec un comportement similaire à celui
+fourni, c’est à dire capable de proposer les différents algorithmes et affichages via
+un système d’option
+*/
