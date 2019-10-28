@@ -26,11 +26,38 @@ Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node
 }
 
 
+// Génère la sous-formule ɸ​1 pour le graph i. ( " Point de départ 's' ")
+
+Z3_ast graphsToPhi1Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
+    return  getNodeVariable(ctx,i,0,pathLength, 1 ); // 1 a modifier
+}
+
+// Génère la sous-formule ɸ​2 pour le graph i. ( " Point d'arrivée 't' ")
+
+Z3_ast graphToPhi2Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
+    return  getNodeVariable(ctx,i,pathLength,pathLength, 2 ); // 2 a modifier
+}
+
+// Génère la sous-formule ɸ​3 pour le graph i. ( " Au moins 1 sommet par position ")
+
+Z3_ast graphToPhi3Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength);
+
+// Génère la sous-formule ɸ​4 pour le graph i. ( " Au plus 1 sommet par position ")
+
+Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength);
+
+// Génère la sous-formule ɸ​5 pour le graph i. ( " Chaque spmmetapparaît au plus une fois ")
+
+Z3_ast graphToPhi5Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength);
+
+// Génère la sous-formule ɸ​6 pour le graph i. ( " Chemin de taille k continue")
+
+Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength);
+
 
 // Génère une formule SAT satisfaisable si et seulement si tous les graphes de graphs contiennent un chemin acceptant de longueur pathLength.
 
 Z3_ast graphsToPathFormula( Z3_context ctx, Graph *graphs, unsigned int numGraphs, int pathLength);
-
 
 
 // Génère une formule SAT satisfaisable si et seulement si tous les graphes de graphs contiennent un chemin acceptant de longueur commune.
