@@ -1,27 +1,38 @@
 #ifndef COCA_SOLVING_H_
 #define COCA_SOLVING_H_
 
-#define max(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a > _b ? _a : _b; })
-
 #include "Graph.h"
 #include <z3.h>
+#include "Z3Tools.h"
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
 
 // Génère une formule consistant en une variable représentant le fait que node du graphe number soit à la position position d'un chemin acceptant.
 
+int max(int a , int b){
+    if(a<b){
+        return b;
+    }
+    return a;
+}
+
 Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node){
+    char* name;
+    name = strcat(name,"X_");
+
     int greater = max(number,max(position,max(k,node)));
-    char str[log10(greater)+1];
+    char str[(int)log10(greater)+1];
+    
     sprintf(str, "%d", number); // à factoriser
-    char* name = strcat("x_",str);
+    name = strcat(name,str);
     sprintf(str, ",%d", position);
     name = strcat(name,str);
     sprintf(str, ",%d", k);
     name = strcat(name,str);
     sprintf(str, ",%d", node);
     name = strcat(name,str);
+
     return mk_bool_var(ctx, name); //son nom sera x_i,j,k,q
 }
 
@@ -29,13 +40,21 @@ Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node
 // Génère la sous-formule ɸ​1 pour le graph i. ( " Point de départ 's' ")
 
 Z3_ast graphsToPhi1Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
-    return  getNodeVariable(ctx,i,0,pathLength, 1 ); // 1 a modifier
+    for(int j = 0; j < orderG(graphs[i]); j++){
+        if(isSource(graphs[i],j)){
+            return getNodeVariable(ctx,i,0,pathLength,j);
+        }
+    }
 }
 
 // Génère la sous-formule ɸ​2 pour le graph i. ( " Point d'arrivée 't' ")
 
 Z3_ast graphToPhi2Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
-    return  getNodeVariable(ctx,i,pathLength,pathLength, 2 ); // 2 a modifier
+    for(int j = 0; j < orderG(graphs[i]); j++){
+        if(isTarget(graphs[i],j)){
+            return getNodeVariable(ctx,i,pathLength,pathLength,j);
+        }
+    }
 }
 
 // Génère la sous-formule ɸ​3 pour le graph i. ( " Au moins 1 sommet par position ")
