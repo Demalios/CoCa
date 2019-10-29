@@ -117,9 +117,43 @@ Z3_ast graphToPhi5Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
     return Z3_mk_and(ctx,orderG(graphs[i]),formulaAND1);
 }
 
+// Renvoie le nombre de voisin d'un sommet
+
+int numberNeighbour(Graph g, int u){
+    int n = 0 ;
+    for(int v = 0 ; v < orderG(g) ; v++ ){
+        if(isEdge(g,u,v)){
+            n ++;
+        }
+    }
+    return n;
+}
+
 // Génère la sous-formule ɸ​6 pour le graph i. ( " Chemin de taille k continue")
 
-Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength);
+Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
+    Z3_ast formulaAND1[pathLength];
+    for(int j = 0 ; j < pathLength ; j++ ){
+        Z3_ast formulaAND2[orderG(graphs[i])];
+        for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
+            int numN = numberNeighbour(graphs[i],u);
+            Z3_ast formulaAND3[2];
+            formulaAND3[0] = getNodeVariable(ctx,i,j,pathLength,u);
+            Z3_ast formulaOR[numN];
+            int id = 0;
+            for(int v = 0 ; v < orderG(graphs[i]) ; v++ ){
+                if(isEdge(graphs[i],u,v)){
+                    formulaOR[id] = getNodeVariable(ctx,i,j+1,pathLength,v);
+                    id ++;
+                }
+            }
+            formulaAND3[1] = Z3_mk_or(ctx,numN,formulaOR);
+            formulaAND2[u] = Z3_mk_and(ctx,2,formulaAND3);
+        }
+        formulaAND1[j] = Z3_mk_and(ctx,orderG(graphs[i]),formulaAND2);
+    }
+    return Z3_mk_and(ctx,pathLength,formulaAND1);
+}
 
 
 // Génère une formule SAT satisfaisable si et seulement si tous les graphes de graphs contiennent un chemin acceptant de longueur pathLength.
