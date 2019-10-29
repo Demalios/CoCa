@@ -35,7 +35,7 @@ Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node
  * 
  * @param ctx, The solver context. Le contexte du solveur.
  * @param graphs, An array of graphs. Une suite de graphes.
- * @param numGraphs, The number of graphs in @p graphs. Le numéro (indice ?) du graphe dans graphs.
+ * @param numGraphs, The number of graphs in @p graphs. Le nombre de graphes dans graphs.
  * @param pathLength, The length of the path to check. La longueur du chemin à vérifier.
  * @return Z3_ast, The formula. La formule.
  */
