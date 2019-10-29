@@ -59,11 +59,40 @@ Z3_ast graphToPhi2Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
 
 // Génère la sous-formule ɸ​3 pour le graph i. ( " Au moins 1 sommet par position ")
 
-Z3_ast graphToPhi3Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength);
+Z3_ast graphToPhi3Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
+    Z3_ast formulaAND[j]; 
+    for(int j = 0 ; j < pathLength ; j++ ){
+        Z3_ast formulaOR[orderG(graphs[i])];
+        for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
+            formulaOR[u] = getNodeVariable(ctx,i,j,pathLength,u);
+        }
+        formulaAND[j] = Z3_mk_or(ctx,orderG(graphs[i]),formulaOR);
+    }
+    return Z3_mk_and(ctx,pathLength,formulaAND);
+}
 
 // Génère la sous-formule ɸ​4 pour le graph i. ( " Au plus 1 sommet par position ")
 
-Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength);
+Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
+    Z3_ast formulaAND1[j];
+    for(int j = 0 ; j < pathLength ; j++ ){
+         Z3_ast formulaAND2[orderG(graphs[i])];
+        for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
+            Z3_ast formulaAND3[orderG(graphs[i])-1];
+            for(int v = 0 ; v < orderG(graphs[i]) ; v++ ){
+                Z3_ast formulaOR[2];
+                if(v!=u){
+                    formulaOR[0] = Z3_mk_not(ctx,getNodeVariable(ctx,i,j,pathLength,u));
+                    formulaOR[1] = Z3_mk_not(ctx,getNodeVariable(ctx,i,j,pathLength,v));
+                }
+                formulaAND3[v] = Z3_mk_or(ctx,formulaOR);
+            }
+            formulaAND2[u] = Z3_mk_and(ctx,formulaAND3)
+        }
+        formulaAND1[j] = Z3_mk_or(ctx,orderG(graphs[i]),formulaAND2);
+    }
+    return Z3_mk_and(ctx,pathLength,formulaAND1);
+}
 
 // Génère la sous-formule ɸ​5 pour le graph i. ( " Chaque spmmetapparaît au plus une fois ")
 
