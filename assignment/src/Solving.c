@@ -105,7 +105,26 @@ Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
 
 // Génère la sous-formule ɸ​5 pour le graphe i. ( "Chaque sommet apparaît au plus une fois")
 
-Z3_ast graphToPhi5Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength);
+Z3_ast graphToPhi5Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
+    Z3_ast formulaAND1[orderG(graphs[i])];
+    for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
+         Z3_ast formulaAND2[pathLength];
+        for(int j = 0 ; j < pathLength ; j++){
+            Z3_ast formulaAND3[pathLength-1];
+            for(int j2 = 0 ; j2 < pathLength ; j2++ ){
+                Z3_ast formulaOR[2];
+                if(j2!=j){
+                    formulaOR[0] = getNodeVariable(ctx,i,j,pathLength,u);
+                    formulaOR[1] = getNodeVariable(ctx,i,j2,pathLength,u);
+                }
+                formulaAND3[j2] = Z3_mk_or(ctx,2,formulaOR);
+            }
+            formulaAND2[j] = Z3_mk_and(ctx,pathLength-1,formulaAND3);
+        }
+        formulaAND1[u] = Z3_mk_and(ctx,pathLength,formulaAND2);
+    }
+    return Z3_mk_and(ctx,orderG(graphs[i]),formulaAND1);
+}
 
 // Génère la sous-formule ɸ​6 pour le graphe i. ( "Chemin de taille k continue")
 
