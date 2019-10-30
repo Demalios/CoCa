@@ -29,8 +29,7 @@ int min(int a , int b){
 
 Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node){
 
-    int greater = max(number,max(position,max(k,node)));
-    char str[(int)log10(greater)+1];
+    char* str;
     
     sprintf(str, "X_%d,%d,%d,%d", number+1, position, k, node);
 
