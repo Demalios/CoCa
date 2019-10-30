@@ -106,8 +106,10 @@ Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
 
 Z3_ast graphToPhi5Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     Z3_ast formulaAND1[orderG(graphs[i])];
+    printf("step2.6.1\n");
     for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
-         Z3_ast formulaAND2[pathLength];
+        Z3_ast formulaAND2[pathLength];
+        printf("step2.6.2\n");
         for(int j = 0 ; j < pathLength ; j++){
             Z3_ast formulaAND3[pathLength-1];
             for(int j2 = 0 ; j2 < pathLength ; j2++ ){
@@ -181,8 +183,8 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
         formulaLittleAND[2] = graphToPhi3Formula(ctx, graphs, i, pathLength);
         printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[2]));
         printf("step2.5\n");
-        formulaLittleAND[3] = graphToPhi4Formula(ctx, graphs, i, pathLength);
-        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[3]));
+        //formulaLittleAND[3] = graphToPhi4Formula(ctx, graphs, i, pathLength);
+        //printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[3]));
         printf("step2.6\n");
         formulaLittleAND[4] = graphToPhi5Formula(ctx, graphs, i, pathLength);
         printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[4]));
