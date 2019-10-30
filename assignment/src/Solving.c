@@ -82,24 +82,47 @@ Z3_ast graphToPhi3Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
 // Génère la sous-formule ɸ​4 pour le graphe i. ( "Au plus 1 sommet par position")
 
 Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
-    Z3_ast formulaAND1[pathLength];
-    for(int j = 0 ; j < pathLength ; j++ ){
-         Z3_ast formulaAND2[orderG(graphs[i])];
-        for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
-            Z3_ast formulaAND3[orderG(graphs[i])-1];
-            for(int v = 0 ; v < orderG(graphs[i]) ; v++ ){
-                Z3_ast formulaOR[2]; //nombre magique
-                if(v!=u){
-                    formulaOR[0] = Z3_mk_not(ctx,getNodeVariable(ctx,i,j,pathLength,u));
-                    formulaOR[1] = Z3_mk_not(ctx,getNodeVariable(ctx,i,j,pathLength,v));
-                }
-                formulaAND3[v] = Z3_mk_or(ctx,2,formulaOR);
+    Z3_ast* formulaAND1 = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength);
+    if(formulaAND1 == NULL){
+        printf("Not enough memory to allocate formulaAND1 in Phi4\n");
+        exit(EXIT_FAILURE);
+    }
+    for(int j = 0 ; j < pathLength ; j++){
+        Z3_ast* formulaAND2 = (Z3_ast*)malloc(sizeof(Z3_ast)*orderG(graphs[i]));
+        if(formulaAND2 == NULL){
+            printf("Not enough memory to allocate formulaAND2 in Phi4\n");
+            exit(EXIT_FAILURE);
+        }
+        for(int u = 0 ; u < orderG(graphs[i]) ; u++){
+            Z3_ast* formulaAND3 = (Z3_ast*)malloc(sizeof(Z3_ast)*(orderG(graphs[i])-1));
+            if(formulaAND3 == NULL){
+                printf("Not enough memory to allocate formulaAND3 in Phi4\n");
+                exit(EXIT_FAILURE);
             }
+            int AND3index = 0;
+            Z3_ast* formulaOR = (Z3_ast*)malloc(sizeof(Z3_ast)*2);
+            if(formulaOR == NULL){
+                printf("Not enough memory to allocate formulaOR in Phi4\n");
+                exit(EXIT_FAILURE);
+            }
+            for(int v = 0 ; v < orderG(graphs[i]) ; v++){
+                if(v!=u){
+                    //Z3_ast formulaOR[2]; //nombre magique
+                    formulaOR[0] = Z3_mk_not(ctx,getNodeVariable(ctx,i,j,pathLength,u));
+                    printf("\n");
+                    formulaOR[1] = Z3_mk_not(ctx,getNodeVariable(ctx,i,j,pathLength,v));
+                    formulaAND3[AND3index++] = Z3_mk_or(ctx,2,formulaOR);
+                }
+            }
+            free(formulaOR);
             formulaAND2[u] = Z3_mk_and(ctx,orderG(graphs[i])-1,formulaAND3);
+            free(formulaAND3);
         }
         formulaAND1[j] = Z3_mk_and(ctx,orderG(graphs[i]),formulaAND2);
     }
-    return Z3_mk_and(ctx,pathLength,formulaAND1);
+    Z3_ast finalAND = Z3_mk_and(ctx,pathLength,formulaAND1);
+    free(formulaAND1);
+    return finalAND;
 }
 
 // Génère la sous-formule ɸ​5 pour le graphe i. ( "Chaque sommet apparaît au plus une fois")
@@ -173,6 +196,10 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
     printf("step2.1\n");
     for(int i = 0 ; i < numGraphs ; i++){
         Z3_ast* formulaLittleAND = (Z3_ast*)malloc(sizeof(Z3_ast)*6); //nombre magique
+        if(formulaOR == NULL){
+            printf("Not enough memory to allocate formulaOR in Phi4\n");
+            exit(EXIT_FAILURE);
+        }
         printf("step2.2\n");
         formulaLittleAND[0] = graphToPhi1Formula(ctx, graphs, i, pathLength);
         printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[0]));
@@ -182,18 +209,19 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
         printf("step2.4\n");
         formulaLittleAND[2] = graphToPhi3Formula(ctx, graphs, i, pathLength);
         printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[2]));
-        printf("step2.5\n");
-        //formulaLittleAND[3] = graphToPhi4Formula(ctx, graphs, i, pathLength);
-        //printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[3]));
-        printf("step2.6\n");
-        formulaLittleAND[4] = graphToPhi5Formula(ctx, graphs, i, pathLength);
-        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[4]));
+        printf("a\n");
+        formulaLittleAND[3] = graphToPhi4Formula(ctx, graphs, i, pathLength);
+        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[3]));
+        printf("z\n");
+        //formulaLittleAND[4] = graphToPhi5Formula(ctx, graphs, i, pathLength);
+        //printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[4]));
         printf("step2.7\n");
         formulaLittleAND[5] = graphToPhi6Formula(ctx, graphs, i, pathLength);
         printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[5]));
         printf("step2.8\n");
         formulaAND[i] = Z3_mk_and(ctx,6,formulaLittleAND);
     }
+    free(formulaLittleAND);
     return Z3_mk_and(ctx,numGraphs,formulaAND);
 }
 
