@@ -40,7 +40,7 @@ Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node
 }
 
 
-// Génère la sous-formule ɸ​1 pour le graphe i. ( "Point de départ s")
+// Génère la sous-formule ɸ​1 pour le graphe i. ("Point de départ s")
 
 Z3_ast graphToPhi1Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     for(int j = 0; j < orderG(graphs[i]); j++){
@@ -68,7 +68,7 @@ Z3_ast graphToPhi2Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
     }
 }
 
-// Génère la sous-formule ɸ​3 pour le graphe i. ( "Au moins 1 sommet par position")
+// Génère la sous-formule ɸ​3 pour le graphe i. ("Au moins 1 sommet par position")
 
 Z3_ast graphToPhi3Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     Z3_ast formulaAND[pathLength+1]; 
@@ -82,7 +82,7 @@ Z3_ast graphToPhi3Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
     return Z3_mk_and(ctx,pathLength+1,formulaAND);
 }
 
-// Génère la sous-formule ɸ​4 pour le graphe i. ( "Au plus 1 sommet par position")
+// Génère la sous-formule ɸ​4 pour le graphe i. ("Au plus 1 sommet par position")
 
 Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     Z3_ast* formulaAND1 = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength+1);
@@ -127,7 +127,7 @@ Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
     return finalAND;
 }
 
-// Génère la sous-formule ɸ​5 pour le graphe i. ( "Chaque sommet apparaît au plus une fois")
+// Génère la sous-formule ɸ​5 pour le graphe i. ("Chaque sommet apparaît au plus une fois")
 
 Z3_ast graphToPhi5Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     Z3_ast formulaAND1[orderG(graphs[i])];
@@ -174,11 +174,11 @@ int numberNeighbour(Graph g, int u){
     return n;
 }
 
-// Génère la sous-formule ɸ​6 pour le graph i. ( " Chemin de taille k continue")
+// Génère la sous-formule ɸ​6 pour le graph i. ("Chemin de taille k continue")
 
 Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
-    Z3_ast formulaAND1[pathLength+1];
-    for(int j = 0 ; j <= pathLength ; j++ ){
+    Z3_ast formulaAND1[pathLength];
+    for(int j = 0 ; j <= pathLength -1; j++ ){
         Z3_ast formulaAND2[orderG(graphs[i])];
         for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
             int numN = numberNeighbour(graphs[i],u);
@@ -186,7 +186,7 @@ Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
             formulaAND3[0] = getNodeVariable(ctx,i,j,pathLength,u);
             Z3_ast formulaOR[numN];
             int id = 0;
-            for(int v = 0 ; v < orderG(graphs[i]) ; v++ ){
+            for(int v = 0 ; v < orderG(graphs[i]) ; v++){
                 if(isEdge(graphs[i],u,v)){
                     formulaOR[id] = getNodeVariable(ctx,i,j+1,pathLength,v);
                     id ++;
@@ -195,9 +195,9 @@ Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
             formulaAND3[1] = Z3_mk_or(ctx,numN,formulaOR);
             formulaAND2[u] = Z3_mk_and(ctx,2,formulaAND3);
         }
-        formulaAND1[j] = Z3_mk_and(ctx,orderG(graphs[i]),formulaAND2);
+        formulaAND1[j] = Z3_mk_or(ctx,orderG(graphs[i]),formulaAND2);
     }
-    return Z3_mk_and(ctx,pathLength+1,formulaAND1);
+    return Z3_mk_and(ctx,pathLength,formulaAND1);
 }
 
 int isSatisfiable(Z3_lbool val){
@@ -227,6 +227,7 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
         formulaLittleAND[0] = graphToPhi1Formula(ctx, graphs, i, pathLength);
         printf("Formula 1 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[0]));
         printf("F1 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[0])));
+        Z3_model model = getModelFromSatFormula(ctx,absurd);
         formulaLittleAND[1] = graphToPhi2Formula(ctx, graphs, i, pathLength);
         printf("Formula 2 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[1]));
         printf("F2 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[1])));
@@ -243,7 +244,7 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
         printf("Formula 6 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[5]));
         printf("F6 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[5])));
         formulaAND[i] = Z3_mk_and(ctx,6,formulaLittleAND);
-        printf("Formule = %d\n",isSatisfiable(isFormulaSat(ctx,formulaAND[i])));
+        printf("Formule finale = %d\n",isSatisfiable(isFormulaSat(ctx,formulaAND[i])));
     }
     free(formulaLittleAND);
     return Z3_mk_and(ctx,numGraphs,formulaAND);
