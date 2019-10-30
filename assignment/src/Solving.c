@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <stdlib.h>
 
 // Renvoie l'entier le plus grand entre a et b
 
@@ -27,22 +28,13 @@ int min(int a , int b){
 // Génère une formule consistant en une variable représentant le fait que node du graphe number soit à la position position d'un chemin acceptant.
 
 Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node){
-    char* name;
-    name = strcat(name,"X_");
 
     int greater = max(number,max(position,max(k,node)));
     char str[(int)log10(greater)+1];
     
-    sprintf(str, "%d", number); // à factoriser
-    name = strcat(name,str);
-    sprintf(str, ",%d", position);
-    name = strcat(name,str);
-    sprintf(str, ",%d", k);
-    name = strcat(name,str);
-    sprintf(str, ",%d", node);
-    name = strcat(name,str);
+    sprintf(str, "X_%d,%d,%d,%d", number+1, position, k, node);
 
-    return mk_bool_var(ctx, name); //son nom sera x_i,j,k,q
+    return mk_bool_var(ctx, str); //son nom sera x_i,j,k,q
 }
 
 
@@ -55,7 +47,15 @@ Z3_ast graphToPhi1Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
         }
     }
 }
-
+/*
+void graphToPhi1FormulaB(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength, Z3_ast * ret){
+    for(int j = 0; j < orderG(graphs[i]); j++){
+        if(isSource(graphs[i],j)){
+            ret[0] = getNodeVariable(ctx,i,0,pathLength,j);
+        }
+    }
+}
+*/
 // Génère la sous-formule ɸ​2 pour le graphe i. ("Point d'arrivée t")
 
 Z3_ast graphToPhi2Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
@@ -169,14 +169,28 @@ Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
 
 Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs, int pathLength){
     Z3_ast formulaAND[pathLength];
+    printf("step2.1\n");
     for(int i = 0 ; i < numGraphs ; i++){
-        Z3_ast formulaLittleAND[6]; //nombre magique
+        Z3_ast* formulaLittleAND = (Z3_ast*)malloc(sizeof(Z3_ast)*6); //nombre magique
+        printf("step2.2\n");
         formulaLittleAND[0] = graphToPhi1Formula(ctx, graphs, i, pathLength);
+        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[0]));
+        printf("step2.3\n");
         formulaLittleAND[1] = graphToPhi2Formula(ctx, graphs, i, pathLength);
+        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[1]));
+        printf("step2.4\n");
         formulaLittleAND[2] = graphToPhi3Formula(ctx, graphs, i, pathLength);
+        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[2]));
+        printf("step2.5\n");
         formulaLittleAND[3] = graphToPhi4Formula(ctx, graphs, i, pathLength);
+        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[3]));
+        printf("step2.6\n");
         formulaLittleAND[4] = graphToPhi5Formula(ctx, graphs, i, pathLength);
+        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[4]));
+        printf("step2.7\n");
         formulaLittleAND[5] = graphToPhi6Formula(ctx, graphs, i, pathLength);
+        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[5]));
+        printf("step2.8\n");
         formulaAND[i] = Z3_mk_and(ctx,6,formulaLittleAND);
     }
     return Z3_mk_and(ctx,numGraphs,formulaAND);
