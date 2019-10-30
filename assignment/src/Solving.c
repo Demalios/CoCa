@@ -29,11 +29,11 @@ int min(int a , int b){
 
 Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node){
 
-    char* str;
-    
+    char* str = (char*)malloc(80);
     sprintf(str, "X_%d,%d,%d,%d", number+1, position, k, node);
-
-    return mk_bool_var(ctx, str); //son nom sera x_i,j,k,q
+    Z3_ast x = mk_bool_var(ctx, str);
+    free(str);
+    return x; //son nom sera x_i,j,k,q
 }
 
 
@@ -106,25 +106,27 @@ Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
 
 Z3_ast graphToPhi5Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     Z3_ast formulaAND1[orderG(graphs[i])];
-    printf("step2.6.1\n");
+    Z3_ast* formulaAND2 = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength);
     for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
-        Z3_ast formulaAND2[pathLength];
-        printf("step2.6.2\n");
+        Z3_ast* formulaAND3 = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength-1);
         for(int j = 0 ; j < pathLength ; j++){
-            Z3_ast formulaAND3[pathLength-1];
+            int id = 0;
             for(int j2 = 0 ; j2 < pathLength ; j2++ ){
                 Z3_ast formulaOR[2];
                 if(j2!=j){
                     formulaOR[0] = getNodeVariable(ctx,i,j,pathLength,u);
                     formulaOR[1] = getNodeVariable(ctx,i,j2,pathLength,u);
+                    formulaAND3[id] = Z3_mk_or(ctx,2,formulaOR);
+                    id++;
                 }
-                formulaAND3[j2] = Z3_mk_or(ctx,2,formulaOR);
             }
             formulaAND2[j] = Z3_mk_and(ctx,pathLength-1,formulaAND3);
         }
         formulaAND1[u] = Z3_mk_and(ctx,pathLength,formulaAND2);
+        free(formulaAND3);
     }
-    return Z3_mk_and(ctx,orderG(graphs[i]),formulaAND1);
+    free(formulaAND2);
+    return Z3_mk_and(ctx,orderG(graphs[i]),formulaAND1);;
 }
 
 // Renvoie le nombre de voisin d'un sommet
@@ -170,30 +172,23 @@ Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
 
 Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs, int pathLength){
     Z3_ast formulaAND[pathLength];
-    printf("step2.1\n");
+    Z3_ast* formulaLittleAND = (Z3_ast*)malloc(sizeof(Z3_ast)*6); //nombre magique
     for(int i = 0 ; i < numGraphs ; i++){
-        Z3_ast* formulaLittleAND = (Z3_ast*)malloc(sizeof(Z3_ast)*6); //nombre magique
-        printf("step2.2\n");
         formulaLittleAND[0] = graphToPhi1Formula(ctx, graphs, i, pathLength);
-        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[0]));
-        printf("step2.3\n");
         formulaLittleAND[1] = graphToPhi2Formula(ctx, graphs, i, pathLength);
-        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[1]));
-        printf("step2.4\n");
         formulaLittleAND[2] = graphToPhi3Formula(ctx, graphs, i, pathLength);
-        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[2]));
-        printf("step2.5\n");
         //formulaLittleAND[3] = graphToPhi4Formula(ctx, graphs, i, pathLength);
-        //printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[3]));
+        //printf("Formula 4 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[3]));
         printf("step2.6\n");
         formulaLittleAND[4] = graphToPhi5Formula(ctx, graphs, i, pathLength);
-        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[4]));
+        printf("Formula 5 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[4]));
         printf("step2.7\n");
         formulaLittleAND[5] = graphToPhi6Formula(ctx, graphs, i, pathLength);
-        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[5]));
+        printf("Formula 6 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[5]));
         printf("step2.8\n");
         formulaAND[i] = Z3_mk_and(ctx,6,formulaLittleAND);
     }
+    free(formulaLittleAND);
     return Z3_mk_and(ctx,numGraphs,formulaAND);
 }
 
