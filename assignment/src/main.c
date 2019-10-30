@@ -44,5 +44,5 @@ int main(int argc, char* argv[]){
 
 
     deleteGraph(graph);
-    return 1;
+    return EXIT_SUCCESS;
 }

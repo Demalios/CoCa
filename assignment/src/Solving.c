@@ -28,15 +28,12 @@ int min(int a , int b){
 // Génère une formule consistant en une variable représentant le fait que node du graphe number soit à la position position d'un chemin acceptant.
 
 Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node){
-    //printf("log number = %lf\n",ceil((double)log10(number)));
-    //printf("log = %d\n",3+ceil((double)log10(number))+ceil((double)log10(position))+ceil((double)log10(k))+ceil((double)log10(node)));
-    //char* str = (char*)malloc(sizeof(char)*(3+log10(number)+log10(position)+log10(k)+log10(node)));
-    char* str = (char*)malloc(sizeof(char)*80);
+    char* str = (char*)malloc(sizeof(char)*(int)ceil(10+log10(max(number,1))+log10(max(position,1))+log10(max(k,1))+log10(max(node,1))));
     if(str == NULL){
         printf("Not enough memory to allocate str in getNodeVariable\n");
         exit(EXIT_FAILURE);
     }
-    sprintf(str, "X_%d,%d,%d,%d", number+1, position, k, node);
+    sprintf(str, "X_%d,%d,%d,%d", (number+1), position, k, node);
     Z3_ast x = mk_bool_var(ctx, str);
     free(str);
     return x; //son nom sera x_i,j,k,q
