@@ -12,16 +12,12 @@
 
 int main(int argc, char* argv[]){
     Graph graph;
-    graph = getGraphFromFile("graphs/assignment-instance/G1.dot");
+    graph = getGraphFromFile("graphs/assignment-instance/triangle.dot");
     //graph = getGraphFromFile(argv[1]);
     printGraph(graph);
-    printf("step1\n");
     Z3_context ctx = makeContext();
-    printf("step2\n");
     Z3_ast formula = graphsToPathFormula(ctx, &graph, 1, 2);
-    printf("step3\n");
     Z3_lbool isSat = isFormulaSat(ctx,formula);
-    printf("step4\n");
     switch (isSat){
         case Z3_L_FALSE:
             printf("%s is not satisfiable.\n",Z3_ast_to_string(ctx,formula));

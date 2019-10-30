@@ -74,26 +74,26 @@ Z3_ast graphToPhi2Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
 // Génère la sous-formule ɸ​3 pour le graphe i. ( "Au moins 1 sommet par position")
 
 Z3_ast graphToPhi3Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
-    Z3_ast formulaAND[pathLength]; 
-    for(int j = 0 ; j < pathLength ; j++ ){
+    Z3_ast formulaAND[pathLength+1]; 
+    for(int j = 0 ; j <= pathLength ; j++ ){
         Z3_ast formulaOR[orderG(graphs[i])];
         for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
             formulaOR[u] = getNodeVariable(ctx,i,j,pathLength,u);
         }
         formulaAND[j] = Z3_mk_or(ctx,orderG(graphs[i]),formulaOR);
     }
-    return Z3_mk_and(ctx,pathLength,formulaAND);
+    return Z3_mk_and(ctx,pathLength+1,formulaAND);
 }
 
 // Génère la sous-formule ɸ​4 pour le graphe i. ( "Au plus 1 sommet par position")
 
 Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
-    Z3_ast* formulaAND1 = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength);
+    Z3_ast* formulaAND1 = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength+1);
     if(formulaAND1 == NULL){
         printf("Not enough memory to allocate formulaAND1 in Phi4\n");
         exit(EXIT_FAILURE);
     }
-    for(int j = 0 ; j < pathLength ; j++){
+    for(int j = 0 ; j <= pathLength ; j++){
         Z3_ast* formulaAND2 = (Z3_ast*)malloc(sizeof(Z3_ast)*orderG(graphs[i]));
         if(formulaAND2 == NULL){
             printf("Not enough memory to allocate formulaAND2 in Phi4\n");
@@ -115,7 +115,6 @@ Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
                 if(v!=u){
                     //Z3_ast formulaOR[2]; //nombre magique
                     formulaOR[0] = Z3_mk_not(ctx,getNodeVariable(ctx,i,j,pathLength,u));
-                    printf("\n");
                     formulaOR[1] = Z3_mk_not(ctx,getNodeVariable(ctx,i,j,pathLength,v));
                     formulaAND3[AND3index++] = Z3_mk_or(ctx,2,formulaOR);
                 }
@@ -126,7 +125,7 @@ Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
         }
         formulaAND1[j] = Z3_mk_and(ctx,orderG(graphs[i]),formulaAND2);
     }
-    Z3_ast finalAND = Z3_mk_and(ctx,pathLength,formulaAND1);
+    Z3_ast finalAND = Z3_mk_and(ctx,pathLength+1,formulaAND1);
     free(formulaAND1);
     return finalAND;
 }
@@ -135,20 +134,20 @@ Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
 
 Z3_ast graphToPhi5Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     Z3_ast formulaAND1[orderG(graphs[i])];
-    Z3_ast* formulaAND2 = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength);
+    Z3_ast* formulaAND2 = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength+1);
     if(formulaAND2 == NULL){
         printf("Not enough memory to allocate formulaAND2 in Phi5\n");
         exit(EXIT_FAILURE);
     }
     for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
-        Z3_ast* formulaAND3 = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength-1);
+        Z3_ast* formulaAND3 = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength);
         if(formulaAND3 == NULL){
             printf("Not enough memory to allocate formulaAND3 in Phi5\n");
             exit(EXIT_FAILURE);
         }
-        for(int j = 0 ; j < pathLength ; j++){
+        for(int j = 0 ; j <= pathLength ; j++){
             int id = 0;
-            for(int j2 = 0 ; j2 < pathLength ; j2++ ){
+            for(int j2 = 0 ; j2 <= pathLength ; j2++ ){
                 Z3_ast formulaOR[2];
                 if(j2!=j){
                     formulaOR[0] = getNodeVariable(ctx,i,j,pathLength,u);
@@ -157,9 +156,9 @@ Z3_ast graphToPhi5Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
                     id++;
                 }
             }
-            formulaAND2[j] = Z3_mk_and(ctx,pathLength-1,formulaAND3);
+            formulaAND2[j] = Z3_mk_and(ctx,pathLength,formulaAND3);
         }
-        formulaAND1[u] = Z3_mk_and(ctx,pathLength,formulaAND2);
+        formulaAND1[u] = Z3_mk_and(ctx,pathLength+1,formulaAND2);
         free(formulaAND3);
     }
     free(formulaAND2);
@@ -181,8 +180,8 @@ int numberNeighbour(Graph g, int u){
 // Génère la sous-formule ɸ​6 pour le graph i. ( " Chemin de taille k continue")
 
 Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
-    Z3_ast formulaAND1[pathLength];
-    for(int j = 0 ; j < pathLength ; j++ ){
+    Z3_ast formulaAND1[pathLength+1];
+    for(int j = 0 ; j <= pathLength ; j++ ){
         Z3_ast formulaAND2[orderG(graphs[i])];
         for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
             int numN = numberNeighbour(graphs[i],u);
@@ -201,9 +200,22 @@ Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
         }
         formulaAND1[j] = Z3_mk_and(ctx,orderG(graphs[i]),formulaAND2);
     }
-    return Z3_mk_and(ctx,pathLength,formulaAND1);
+    return Z3_mk_and(ctx,pathLength+1,formulaAND1);
 }
 
+int isSatisfiable(Z3_lbool val){
+    switch (val)
+        {
+        case Z3_L_FALSE:
+            return -1;
+
+        case Z3_L_UNDEF:
+            return 0;
+
+        case Z3_L_TRUE:
+            return 1;
+        }
+}
 
 // Génère une formule SAT satisfaisable si et seulement si tous les graphes de graphs contiennent un chemin acceptant de longueur pathLength.
 
@@ -216,16 +228,25 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
     }
     for(int i = 0 ; i < numGraphs ; i++){
         formulaLittleAND[0] = graphToPhi1Formula(ctx, graphs, i, pathLength);
+        printf("Formula 1 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[0]));
+        printf("F1 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[0])));
         formulaLittleAND[1] = graphToPhi2Formula(ctx, graphs, i, pathLength);
+        printf("Formula 2 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[1]));
+        printf("F2 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[1])));
         formulaLittleAND[2] = graphToPhi3Formula(ctx, graphs, i, pathLength);
+        printf("Formula 3 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[2]));
+        printf("F3 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[2])));
         formulaLittleAND[3] = graphToPhi4Formula(ctx, graphs, i, pathLength);
-        printf("Formula %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[3]));
+        printf("Formula 4 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[3]));
+        printf("F4 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[3])));
         formulaLittleAND[4] = graphToPhi5Formula(ctx, graphs, i, pathLength);
         printf("Formula 5 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[4]));
+        printf("F5 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[4])));
         formulaLittleAND[5] = graphToPhi6Formula(ctx, graphs, i, pathLength);
         printf("Formula 6 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[5]));
-        printf("step2.8\n");
+        printf("F6 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[5])));
         formulaAND[i] = Z3_mk_and(ctx,6,formulaLittleAND);
+        printf("Formule = %d\n",isSatisfiable(isFormulaSat(ctx,formulaAND[i])));
     }
     free(formulaLittleAND);
     return Z3_mk_and(ctx,numGraphs,formulaAND);
