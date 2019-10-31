@@ -14,7 +14,7 @@ int main(int argc, char* argv[]){
     bool DEFAULT_DISP_G = false;
     bool DEFAULT_DISP_F = false;
     int numArg = 1;
-    
+
     if(argc>3 && (strcmp(argv[1],"-h") == 0 || strcmp(argv[2],"-h") == 0 || strcmp(argv[3],"-h") == 0)){
         printf("You can use the following argument :\n");
         printf("-h : To display this message\n");
@@ -99,10 +99,13 @@ int main(int argc, char* argv[]){
             */
             break;
     }
-    
+
     for(int i = 0 ; i < numGraph ; i++){
         deleteGraph(graph[i]);
     }
+    printf("All graphs deleted.\n");
 
+    Z3_del_context(ctx);
+    printf("Context deleted, memory is now clean.\n");
     return EXIT_SUCCESS;
 }
