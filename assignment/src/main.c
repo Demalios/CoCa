@@ -11,12 +11,13 @@
 #include "Solving.h"
 
 int main(int argc, char* argv[]){
-    Graph graph;
-    graph = getGraphFromFile("graphs/assignment-instance/triangle.dot");
+    Graph graph[2];
+    graph[0] = getGraphFromFile("graphs/assignment-instance/triangle.dot");
+    graph[1] = getGraphFromFile("graphs/assignment-instance/G1.dot");
     //graph = getGraphFromFile(argv[1]);
-    printGraph(graph);
+    //printGraph(graph);
     Z3_context ctx = makeContext();
-    Z3_ast formula = graphsToPathFormula(ctx, &graph, 1, 2);
+    Z3_ast formula = graphsToPathFormula(ctx, graph, 2, 2);
     Z3_lbool isSat = isFormulaSat(ctx,formula);
     switch (isSat){
         case Z3_L_FALSE:
@@ -39,6 +40,7 @@ int main(int argc, char* argv[]){
     }
 
 
-    deleteGraph(graph);
+    deleteGraph(graph[0]);
+    deleteGraph(graph[1]);
     return EXIT_SUCCESS;
 }

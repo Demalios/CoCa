@@ -147,8 +147,8 @@ Z3_ast graphToPhi5Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
             for(int j2 = 0 ; j2 <= pathLength ; j2++ ){
                 Z3_ast formulaOR[2];
                 if(j2!=j){
-                    formulaOR[0] = getNodeVariable(ctx,i,j,pathLength,u);
-                    formulaOR[1] = getNodeVariable(ctx,i,j2,pathLength,u);
+                    formulaOR[0] = Z3_mk_not(ctx,getNodeVariable(ctx,i,j,pathLength,u));
+                    formulaOR[1] = Z3_mk_not(ctx,getNodeVariable(ctx,i,j2,pathLength,u));
                     formulaAND3[id] = Z3_mk_or(ctx,2,formulaOR);
                     id++;
                 }
@@ -162,8 +162,8 @@ Z3_ast graphToPhi5Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
     return Z3_mk_and(ctx,orderG(graphs[i]),formulaAND1);;
 }
 
-// Renvoie le nombre de voisin d'un sommet
-
+// Renvoie le nombre de voisin d'un sommet ( Ancienne version )
+/*
 int numberNeighbour(Graph g, int u){
     int n = 0 ;
     for(int v = 0 ; v < orderG(g) ; v++ ){
@@ -173,9 +173,29 @@ int numberNeighbour(Graph g, int u){
     }
     return n;
 }
-
+*/
 // Génère la sous-formule ɸ​6 pour le graph i. ("Chemin de taille k continue")
-
+Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
+    Z3_ast formulaAND[pathLength];
+    for(int j = 0 ; j <= pathLength - 1; j++ ){
+        int ind = 0;
+        Z3_ast formulaOR[sizeG(graphs[i])];
+        Z3_ast formulaLittleAND[2];
+        for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
+            for(int v = 0 ; v < orderG(graphs[i]) ; v++ ){
+                if(isEdge(graphs[i],u,v)){
+                    formulaLittleAND[0] = getNodeVariable(ctx,i,j,pathLength,u);
+                    formulaLittleAND[1] = getNodeVariable(ctx,i,j+1,pathLength,v);
+                    formulaOR[ind] = Z3_mk_and(ctx,2,formulaLittleAND);
+                    ind ++;
+                }
+            }
+        }
+        formulaAND[j] = Z3_mk_or(ctx,sizeG(graphs[i]),formulaOR);
+    }
+    return Z3_mk_and(ctx,pathLength,formulaAND);
+}
+/* ( Ancienne version )
 Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     Z3_ast formulaAND1[pathLength];
     for(int j = 0 ; j <= pathLength -1; j++ ){
@@ -199,27 +219,7 @@ Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
     }
     return Z3_mk_and(ctx,pathLength,formulaAND1);
 }
-
-Z3_ast phi6test(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
-    Z3_ast formulaAND[pathLength];
-    for(int j = 0 ; j <= pathLength - 1; j++ ){
-        int ind = 0;
-        Z3_ast formulaOR[sizeG(graphs[i])];
-        Z3_ast formulaLittleAND[2];
-        for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
-            for(int v = 0 ; v < orderG(graphs[i]) ; v++ ){
-                if(isEdge(graphs[i],u,v)){
-                    formulaLittleAND[0] = getNodeVariable(ctx,i,j,pathLength,u);
-                    formulaLittleAND[1] = getNodeVariable(ctx,i,j+1,pathLength,v);
-                    formulaOR[ind] = Z3_mk_and(ctx,2,formulaLittleAND);
-                    ind ++;
-                }
-            }
-        }
-        formulaAND[j] = Z3_mk_or(ctx,sizeG(graphs[i]),formulaOR);
-    }
-    return Z3_mk_and(ctx,pathLength,formulaAND);
-}
+*/
 
 int isSatisfiable(Z3_lbool val){
     switch (val)
@@ -261,8 +261,8 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
         formulaLittleAND[4] = graphToPhi5Formula(ctx, graphs, i, pathLength);
         printf("Formula 5 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[4]));
         printf("F5 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[4])));
-        //formulaLittleAND[5] = graphToPhi6Formula(ctx, graphs, i, pathLength);
-        formulaLittleAND[5] = phi6test(ctx, graphs, i, pathLength);
+        formulaLittleAND[5] = graphToPhi6Formula(ctx, graphs, i, pathLength);
+        //formulaLittleAND[5] = phi6test(ctx, graphs, i, pathLength);
         printf("Formula 6 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[5]));
         printf("F6 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[5])));
         formulaAND[i] = Z3_mk_and(ctx,6,formulaLittleAND);
