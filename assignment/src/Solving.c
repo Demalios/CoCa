@@ -246,27 +246,27 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
     }
     for(int i = 0 ; i < numGraphs ; i++){
         formulaLittleAND[0] = graphToPhi1Formula(ctx, graphs, i, pathLength);
-        printf("Formula 1 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[0]));
-        printf("F1 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[0])));
+        //printf("Formula 1 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[0]));
+        //printf("F1 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[0])));
         //Z3_model model = getModelFromSatFormula(ctx,absurd);
         formulaLittleAND[1] = graphToPhi2Formula(ctx, graphs, i, pathLength);
-        printf("Formula 2 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[1]));
-        printf("F2 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[1])));
+        //printf("Formula 2 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[1]));
+        //printf("F2 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[1])));
         formulaLittleAND[2] = graphToPhi3Formula(ctx, graphs, i, pathLength);
-        printf("Formula 3 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[2]));
-        printf("F3 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[2])));
+        //printf("Formula 3 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[2]));
+        //printf("F3 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[2])));
         formulaLittleAND[3] = graphToPhi4Formula(ctx, graphs, i, pathLength);
-        printf("Formula 4 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[3]));
-        printf("F4 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[3])));
+        //printf("Formula 4 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[3]));
+        //printf("F4 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[3])));
         formulaLittleAND[4] = graphToPhi5Formula(ctx, graphs, i, pathLength);
-        printf("Formula 5 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[4]));
-        printf("F5 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[4])));
+        //printf("Formula 5 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[4]));
+        //printf("F5 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[4])));
         formulaLittleAND[5] = graphToPhi6Formula(ctx, graphs, i, pathLength);
         //formulaLittleAND[5] = phi6test(ctx, graphs, i, pathLength);
-        printf("Formula 6 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[5]));
-        printf("F6 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[5])));
+        //printf("Formula 6 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[5]));
+        //printf("F6 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[5])));
         formulaAND[i] = Z3_mk_and(ctx,6,formulaLittleAND);
-        printf("Formule finale = %d\n",isSatisfiable(isFormulaSat(ctx,formulaAND[i])));
+        //printf("Formule finale = %d\n",isSatisfiable(isFormulaSat(ctx,formulaAND[i])));
     }
     free(formulaLittleAND);
     return Z3_mk_and(ctx,numGraphs,formulaAND);
@@ -280,11 +280,13 @@ Z3_ast graphsToFullFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
     for(int i = 1; i > numGraphs; i++){
         commonLength = min(commonLength, orderG(graphs[i]));
     }
-    Z3_ast formulaOR[commonLength];
-    for(int l = 0; l < commonLength; l++){
-        formulaOR[l] = graphsToPathFormula(ctx, graphs, numGraphs, l);
+    Z3_ast formulaOR[commonLength-1];
+    for(int l = 1; l < commonLength; l++){
+        formulaOR[l-1] = graphsToPathFormula(ctx, graphs, numGraphs, l);
+        //printf("Formula k = %d, %s created.\n",l,Z3_ast_to_string(ctx,formulaOR[l-1]));
+        //printf("F = %d\n",isSatisfiable(isFormulaSat(ctx,formulaOR[l-1])));
     }
-    return Z3_mk_or(ctx,2,formulaOR);
+    return Z3_mk_or(ctx,commonLength-1,formulaOR);
 }
 
 

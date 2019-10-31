@@ -17,7 +17,8 @@ int main(int argc, char* argv[]){
     //graph = getGraphFromFile(argv[1]);
     //printGraph(graph);
     Z3_context ctx = makeContext();
-    Z3_ast formula = graphsToPathFormula(ctx, graph, 2, 2);
+    /* Pour un k précis
+    Z3_ast formula = graphsToPathFormula(ctx, graph, 2, 3);
     Z3_lbool isSat = isFormulaSat(ctx,formula);
     switch (isSat){
         case Z3_L_FALSE:
@@ -35,10 +36,32 @@ int main(int argc, char* argv[]){
             printf("    The value of %s is %d\n",Z3_ast_to_string(ctx,x),valueOfVarInModel(ctx,model,x));
             printf("    The value of %s is %d\n",Z3_ast_to_string(ctx,y),valueOfVarInModel(ctx,model,y));
             printf("    The value of %s is %d\n",Z3_ast_to_string(ctx,negX),valueOfVarInModel(ctx,model,negX));
+            
+            break;
+    }
+    */
+
+    Z3_ast formule = graphsToFullFormula(ctx,graph,2);
+    Z3_lbool isSat = isFormulaSat(ctx,formule);
+    switch (isSat){
+        case Z3_L_FALSE:
+            printf("Non\n");
+            break;
+
+        case Z3_L_UNDEF:
+            printf("We don't know if %s is satisfiable.\n",Z3_ast_to_string(ctx,formule));
+            break;
+
+        case Z3_L_TRUE:
+            printf("Oui\n");
+            /*Z3_model model = getModelFromSatFormula(ctx,absurd);
+            printf("Model obtained for %s:\n",Z3_ast_to_string(ctx,absurd));
+            printf("    The value of %s is %d\n",Z3_ast_to_string(ctx,x),valueOfVarInModel(ctx,model,x));
+            printf("    The value of %s is %d\n",Z3_ast_to_string(ctx,y),valueOfVarInModel(ctx,model,y));
+            printf("    The value of %s is %d\n",Z3_ast_to_string(ctx,negX),valueOfVarInModel(ctx,model,negX));
             */
             break;
     }
-
 
     deleteGraph(graph[0]);
     deleteGraph(graph[1]);
