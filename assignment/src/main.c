@@ -15,6 +15,26 @@ int main(int argc, char* argv[]){
     bool DEFAULT_DISP_F = false;
     int numArg = 1;
 
+    if(argc > 2){
+        for(int i = 0 ; i < argc -2 ; i++ ){
+            if(strcmp(argv[i+1],"-h") == 0){
+                printf("You can use the following argument :\n");
+                printf("-h : To display this message\n");
+                printf("-F : To display the computed formula\n");
+                printf("-v : To display the parsed graphs\n");
+                numArg ++;
+            }
+            if(strcmp(argv[i+1],"-F") == 0){
+                DEFAULT_DISP_F = true;
+                numArg ++;
+            }
+            if(strcmp(argv[i+1],"-v") == 0){
+                DEFAULT_DISP_G = true;
+                numArg ++;
+            }
+        }
+    }
+    /*
     if(argc>3 && (strcmp(argv[1],"-h") == 0 || strcmp(argv[2],"-h") == 0 || strcmp(argv[3],"-h") == 0)){
         printf("You can use the following argument :\n");
         printf("-h : To display this message\n");
@@ -23,6 +43,7 @@ int main(int argc, char* argv[]){
         numArg ++;
     }
     if(argc>3 && (strcmp(argv[1],"-F") == 0 || strcmp(argv[2],"-F") == 0 || strcmp(argv[3],"-F") == 0)){
+        printf("ici\n");
         DEFAULT_DISP_F = true;
         numArg ++;
     }
@@ -30,7 +51,7 @@ int main(int argc, char* argv[]){
         DEFAULT_DISP_G = true;
         numArg ++;
     }
-
+    */
     int numGraph = argc-numArg;
     Graph graph[numGraph];
     for(int i = 0 ; i < numGraph ; i++){
