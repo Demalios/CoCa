@@ -8,6 +8,8 @@
 #include <string.h>
 #include <math.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 // Renvoie l'entier le plus grand entre a et b
 
@@ -42,12 +44,16 @@ Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node
 
 // Génère la sous-formule ɸ​1 pour le graphe i. ("Point de départ s")
 
-Z3_ast graphToPhi1Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
+int subPhi1(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     for(int j = 0; j < orderG(graphs[i]); j++){
         if(isSource(graphs[i],j)){
-            return getNodeVariable(ctx,i,0,pathLength,j);
+            return j;
         }
     }
+}
+
+Z3_ast graphToPhi1Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
+    return getNodeVariable(ctx,i,0,pathLength,subPhi1(ctx, graphs, i, pathLength)); 
 }
 /*
 void graphToPhi1FormulaB(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength, Z3_ast * ret){
@@ -60,12 +66,16 @@ void graphToPhi1FormulaB(Z3_context ctx, Graph *graphs, unsigned int i, int path
 */
 // Génère la sous-formule ɸ​2 pour le graphe i. ("Point d'arrivée t")
 
-Z3_ast graphToPhi2Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
+int subPhi2(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     for(int j = 0; j < orderG(graphs[i]); j++){
         if(isTarget(graphs[i],j)){
-            return getNodeVariable(ctx,i,pathLength,pathLength,j);
+            return j;
         }
     }
+}
+
+Z3_ast graphToPhi2Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
+    return getNodeVariable(ctx,i,pathLength,pathLength,subPhi2(ctx, graphs, i, pathLength));
 }
 
 // Génère la sous-formule ɸ​3 pour le graphe i. ("Au moins 1 sommet par position")
@@ -345,7 +355,7 @@ void printPathsFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numG
     int tab[pathLength+1];
     for(int i = 0 ; i < numGraph ; i++ ){
         for(int j = 0 ; j < pathLength+1 ; j++ ){
-            for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
+            for(int u = 0 ; u < orderG(graphs[i]) ; u++){
                 if(valueOfVarInModel(ctx, model, getNodeVariable(ctx,i,j,pathLength,u))){
                     tab[j] = u; 
                 }
@@ -355,7 +365,7 @@ void printPathsFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numG
         for(int k = 0 ; k < pathLength ; k++ ){
             printf("%s -> ",getNodeName(graphs[i],tab[k]));
         }
-        printf("%s\n",getNodeName(graphs[i],tab[pathLength]));
+        printf("%s;\n",getNodeName(graphs[i],tab[pathLength]));
     }
 }
 
@@ -363,7 +373,26 @@ void printPathsFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numG
 
 // Crée le fichier représentant la solution du problème décrit par model, ou ("result-l%d.dot,pathLength") si name == NULL
 
-void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGraph, int pathLength, char* name);
+void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGraph, int pathLength, char* name){
+    // open the file for writing //
+    char* tmp = (char*)malloc(sizeof(char)*80); //à changer
+    if(tmp == NULL){
+        printf("Not enough memory to allocate tmp in createDotFromModel\n");
+        exit(EXIT_FAILURE);
+    }
+    sprintf(tmp, "%s.dot",name);
+    int fp = open(tmp, O_WRONLY);
+    dup2(1,fp);
+    printf ("digraph %s{\n",name);
+    for(int graphNumber = 0; graphNumber < numGraph; graphNumber++){
+        printf ("_%d_%s [initial=1,color=green][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],subPhi1(ctx, graphs, numGraph, pathLength)));
+        printf ("_%d_%s [final=1,color=red][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],subPhi2(ctx, graphs, numGraph, pathLength)));
+        printf ("_%d_",graphNumber);
+        printPathsFromModel(ctx, model, graphs, numGraph, pathLength);
+    }
+    // close the file //  
+    close(fp);
+}
 
 #endif
 

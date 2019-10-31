@@ -13,6 +13,7 @@
 int main(int argc, char* argv[]){
     bool DEFAULT_DISP_G = false;
     bool DEFAULT_DISP_F = false;
+    bool DEFAULT_DISP_f = false;
     bool DEFAULT_DISP_P = false;
     int numArg = 1;
 
@@ -22,6 +23,8 @@ int main(int argc, char* argv[]){
             printf("-h : To display this message\n");
             printf("-F : To display the computed formula\n");
             printf("-v : To display the parsed graphs\n");
+            printf("-t : To display a valid path for each graph of size found in common\n");
+            printf("-f : To create a .dot file with the valid paths written in them\n");
             numArg ++;
         }
         if(strcmp(argv[i],"-F") == 0){
@@ -34,6 +37,10 @@ int main(int argc, char* argv[]){
         }
         if(strcmp(argv[i],"-v") == 0){
             DEFAULT_DISP_G = true;
+            numArg ++;
+        }
+        if(strcmp(argv[i],"-f") == 0){
+            DEFAULT_DISP_f = true;
             numArg ++;
         }
     }
@@ -120,6 +127,12 @@ int main(int argc, char* argv[]){
                 Z3_model model = getModelFromSatFormula( ctx, formula);
                 int k = getSolutionLengthFromModel(ctx,model,graph);
                 printPathsFromModel( ctx, model, graph, numGraph, k);
+            }
+
+            if(DEFAULT_DISP_f){
+                Z3_model model = getModelFromSatFormula(ctx, formula);
+                int k = getSolutionLengthFromModel(ctx,model,graph);
+                createDotFromModel(ctx, model, graph, numGraph, k, "sol");
             }
             
             /*Z3_model model = getModelFromSatFormula(ctx,absurd);
