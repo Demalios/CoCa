@@ -238,13 +238,17 @@ int isSatisfiable(Z3_lbool val){
 // Génère une formule SAT satisfaisable si et seulement si tous les graphes de graphs contiennent un chemin acceptant de longueur pathLength.
 
 Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs, int pathLength){
-    Z3_ast formulaAND[pathLength];
+    Z3_ast* formulaAND = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength);
+    if(formulaAND == NULL){
+        printf("Not enough memory to allocate formulaLittleAND in graphsToPathFormula\n");
+        exit(EXIT_FAILURE);
+    }
     Z3_ast* formulaLittleAND = (Z3_ast*)malloc(sizeof(Z3_ast)*6); //nombre magique
     if(formulaLittleAND == NULL){
         printf("Not enough memory to allocate formulaLittleAND in graphsToPathFormula\n");
         exit(EXIT_FAILURE);
     }
-    for(int i = 0 ; i < numGraphs ; i++){
+    for(int i = 0 ; i < numGraphs-1 ; i++){
         formulaLittleAND[0] = graphToPhi1Formula(ctx, graphs, i, pathLength);
         //printf("Formula 1 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[0]));
         //printf("F1 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[0])));
@@ -269,7 +273,9 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
         //printf("Formule finale = %d\n",isSatisfiable(isFormulaSat(ctx,formulaAND[i])));
     }
     free(formulaLittleAND);
-    return Z3_mk_and(ctx,numGraphs,formulaAND);
+    Z3_ast x = Z3_mk_and(ctx,numGraphs-1,formulaAND);
+    free(formulaAND);
+    return x;
 }
 
 
@@ -277,7 +283,7 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
 
 Z3_ast graphsToFullFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs){
     int commonLength = orderG(graphs[0]); //vérifier si ça ne commence pas à l'indice 1
-    for(int i = 1; i > numGraphs; i++){
+    for(int i = 1; i < numGraphs; i++){
         commonLength = min(commonLength, orderG(graphs[i]));
     }
     Z3_ast formulaOR[commonLength-1];
@@ -292,13 +298,44 @@ Z3_ast graphsToFullFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
 
 // Obtient la longueur de la solution d'un modèle donné.
 
-int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs);
-
-
+int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs){
+    int k = 0;
+    int maxLength = orderG(graphs[0]);
+    for(int k = 1 ; k < maxLength+1 ; k++ ){
+        for(int j = 0 ; j < k+1 ; j++ ){
+            int numVal = 0;
+            for(int u = 0 ; u < orderG(graphs[0]) ; u++ ){
+                if(valueOfVarInModel(ctx, model, getNodeVariable(ctx,0,j,k,u))){
+                    numVal++;
+                }
+            }
+            if(numVal == k){
+                return k-1;
+            }
+            numVal = 0 ;
+        }
+    }
+}
 
 // Affiche les chemins de longueur pathLength pour tous les graphes décrits dans model.
 
-void printPathsFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGraph, int pathLength);
+void printPathsFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGraph, int pathLength){
+    int tab[pathLength+1];
+    for(int i = 0 ; i < numGraph ; i++ ){
+        for(int j = 0 ; j < pathLength+1 ; j++ ){
+            for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
+                if(valueOfVarInModel(ctx, model, getNodeVariable(ctx,i,j,pathLength,u))){
+                    tab[j] = u; 
+                }
+            }
+        }
+        printf("Chemin valide pour le graphe %d\n",i);
+        for(int k = 0 ; k < pathLength ; k++ ){
+            printf("%s -> ",getNodeName(graphs[i],tab[k]));
+        }
+        printf("%s\n",getNodeName(graphs[i],tab[pathLength]));
+    }
+}
 
 
 
