@@ -13,25 +13,28 @@
 int main(int argc, char* argv[]){
     bool DEFAULT_DISP_G = false;
     bool DEFAULT_DISP_F = false;
+    bool DEFAULT_DISP_P = false;
     int numArg = 1;
 
-    if(argc > 2){
-        for(int i = 0 ; i < argc-2 ; i++ ){
-            if(strcmp(argv[i+1],"-h") == 0){
-                printf("You can use the following argument :\n");
-                printf("-h : To display this message\n");
-                printf("-F : To display the computed formula\n");
-                printf("-v : To display the parsed graphs\n");
-                numArg ++;
-            }
-            if(strcmp(argv[i+1],"-F") == 0){
-                DEFAULT_DISP_F = true;
-                numArg ++;
-            }
-            if(strcmp(argv[i+1],"-v") == 0){
-                DEFAULT_DISP_G = true;
-                numArg ++;
-            }
+    for(int i = 1 ; i < argc ; i++ ){
+        if(strcmp(argv[i],"-h") == 0){
+            printf("You can use the following argument :\n");
+            printf("-h : To display this message\n");
+            printf("-F : To display the computed formula\n");
+            printf("-v : To display the parsed graphs\n");
+            numArg ++;
+        }
+        if(strcmp(argv[i],"-F") == 0){
+            DEFAULT_DISP_F = true;
+            numArg ++;
+        }
+        if(strcmp(argv[i],"-t") == 0){
+            DEFAULT_DISP_P = true;
+            numArg ++;
+        }
+        if(strcmp(argv[i],"-v") == 0){
+            DEFAULT_DISP_G = true;
+            numArg ++;
         }
     }
     /*
@@ -113,9 +116,11 @@ int main(int argc, char* argv[]){
             }
             printf("Oui\n");
             
-            //Z3_model model = getModelFromSatFormula( ctx, formula);
-            //int k = getSolutionLengthFromModel(ctx,model,graph);
-            //printPathsFromModel( ctx, model, graph, numGraph, k);
+            if(DEFAULT_DISP_P){
+                Z3_model model = getModelFromSatFormula( ctx, formula);
+                int k = getSolutionLengthFromModel(ctx,model,graph);
+                printPathsFromModel( ctx, model, graph, numGraph, k);
+            }
             
             /*Z3_model model = getModelFromSatFormula(ctx,absurd);
             printf("Model obtained for %s:\n",Z3_ast_to_string(ctx,absurd));
