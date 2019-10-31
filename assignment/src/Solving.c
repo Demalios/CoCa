@@ -239,6 +239,7 @@ int isSatisfiable(Z3_lbool val){
 
 Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs, int pathLength){
     Z3_ast* formulaAND = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength);
+    //Z3_ast formulaAND[pathLength];
     if(formulaAND == NULL){
         printf("Not enough memory to allocate formulaLittleAND in graphsToPathFormula\n");
         exit(EXIT_FAILURE);
@@ -248,7 +249,7 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
         printf("Not enough memory to allocate formulaLittleAND in graphsToPathFormula\n");
         exit(EXIT_FAILURE);
     }
-    for(int i = 0 ; i < numGraphs-1 ; i++){
+    for(int i = 0 ; i < numGraphs ; i++){
         formulaLittleAND[0] = graphToPhi1Formula(ctx, graphs, i, pathLength);
         //printf("Formula 1 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[0]));
         //printf("F1 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[0])));
@@ -273,7 +274,7 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
         //printf("Formule finale = %d\n",isSatisfiable(isFormulaSat(ctx,formulaAND[i])));
     }
     free(formulaLittleAND);
-    Z3_ast x = Z3_mk_and(ctx,numGraphs-1,formulaAND);
+    Z3_ast x = Z3_mk_and(ctx,numGraphs,formulaAND);
     free(formulaAND);
     return x;
 }
