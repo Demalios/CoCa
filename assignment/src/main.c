@@ -16,7 +16,7 @@ int main(int argc, char* argv[]){
     int numArg = 1;
 
     if(argc > 2){
-        for(int i = 0 ; i < argc -2 ; i++ ){
+        for(int i = 0 ; i < argc-2 ; i++ ){
             if(strcmp(argv[i+1],"-h") == 0){
                 printf("You can use the following argument :\n");
                 printf("-h : To display this message\n");
@@ -53,6 +53,11 @@ int main(int argc, char* argv[]){
     }
     */
     int numGraph = argc-numArg;
+    if (numGraph < 1){
+        //usage
+        printf("Please enter at least one graph, for example: ./equalPath -h graphs/assignment-instance/G1.dot graphs/assignment-instance/triangle.dot\n");
+        return EXIT_SUCCESS;
+    }
     Graph graph[numGraph];
     for(int i = 0 ; i < numGraph ; i++){
         graph[i] = getGraphFromFile(argv[i+numArg]);
