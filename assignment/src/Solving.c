@@ -46,16 +46,12 @@ Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node
 
 // Génère la sous-formule ɸ​1 pour le graphe i. ("Point de départ s")
 
-int subPhi1(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
+Z3_ast graphToPhi1Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     for(int j = 0; j < orderG(graphs[i]); j++){
         if(isSource(graphs[i],j)){
-            return j;
+            return getNodeVariable(ctx,i,0,pathLength,j)            ;
         }
     }
-}
-
-Z3_ast graphToPhi1Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
-    return getNodeVariable(ctx,i,0,pathLength,subPhi1(ctx, graphs, i, pathLength)); 
 }
 /*
 void graphToPhi1FormulaB(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength, Z3_ast * ret){
@@ -68,17 +64,13 @@ void graphToPhi1FormulaB(Z3_context ctx, Graph *graphs, unsigned int i, int path
 */
 // Génère la sous-formule ɸ​2 pour le graphe i. ("Point d'arrivée t")
 
-int subPhi2(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
+Z3_ast graphToPhi2Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     for(int j = 0; j < orderG(graphs[i]); j++){
         //printf("j = %d\n",j);
         if(isTarget(graphs[i],j)){
-            return j;
+            return getNodeVariable(ctx,i,pathLength,pathLength,j);
         }
     }
-}
-
-Z3_ast graphToPhi2Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
-    return getNodeVariable(ctx,i,pathLength,pathLength,subPhi2(ctx, graphs, i, pathLength));
 }
 
 // Génère la sous-formule ɸ​3 pour le graphe i. ("Au moins 1 sommet par position")
@@ -354,29 +346,31 @@ int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs){
 
 // Affiche les chemins de longueur pathLength pour tous les graphes décrits dans model.
 
-void printPathsFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGraph, int pathLength){
+void oneGraphPrintPathsFromModel(Z3_context ctx, Z3_model model, Graph graph, int graphIndex, int pathLength){
     int tab[pathLength+1];
-    for(int i = 0 ; i < numGraph ; i++ ){
-        for(int j = 0 ; j < pathLength+1 ; j++ ){
-            for(int u = 0 ; u < orderG(graphs[i]) ; u++){
-                if(valueOfVarInModel(ctx, model, getNodeVariable(ctx,i,j,pathLength,u))){
-                    tab[j] = u; 
-                }
+    for(int j = 0 ; j <= pathLength ; j++){
+        for(int u = 0 ; u < orderG(graph) ; u++){
+            if(valueOfVarInModel(ctx, model, getNodeVariable(ctx,graphIndex,j,pathLength,u))){
+                tab[j] = u;
             }
         }
-        //printf("Chemin valide pour le graphe %d\n",i);
-        for(int k = 0 ; k < pathLength ; k++ ){
-            printf("%s -> ",getNodeName(graphs[i],tab[k]));
-        }
-        printf("%s;\n",getNodeName(graphs[i],tab[pathLength]));
+    }
+    for(int k = 0 ; k < pathLength ; k++){
+        printf("%s -> ",getNodeName(graph,tab[k]));
+    }
+    printf("%s;\n",getNodeName(graph,tab[pathLength]));
+}
+
+void printPathsFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGraph, int pathLength){
+    for(int i = 0 ; i < numGraph ; i++ ){
+        printf("Chemin valide pour le graphe %d\n",i);
+        oneGraphPrintPathsFromModel(ctx, model, graphs[i], i, pathLength);
     }
 }
 
-
-
-void get_source_and_destination(Z3_context ctx, Z3_model model, Graph *graphs, int graphNumber, int pathLength, int * tab){
+void get_source_and_destination(Z3_context ctx, Z3_model model, Graph graph, int graphNumber, int pathLength, int * tab){
     //int tab[2];
-    for(int u = 0 ; u < orderG(graphs[graphNumber]) ; u++){
+    for(int u = 0 ; u < orderG(graph) ; u++){
         if(valueOfVarInModel(ctx, model, getNodeVariable(ctx,graphNumber,0,pathLength,u))){
             tab[0] = u;
         }
@@ -387,41 +381,31 @@ void get_source_and_destination(Z3_context ctx, Z3_model model, Graph *graphs, i
     return;
 }
 
-
 // Crée le fichier représentant la solution du problème décrit par model, ou ("result-l%d.dot,pathLength") si name == NULL
 
 void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGraph, int pathLength, char* name){
     // open the file for writing //
-    char* tmp = (char*)malloc(sizeof(char)*80); //à changer
+    char* tmp = (char*)malloc(sizeof(char)*(13+strlen(name)+log10(pathLength))); //nombre magique
     if(tmp == NULL){
         printf("Not enough memory to allocate tmp in createDotFromModel\n");
         exit(EXIT_FAILURE);
     }
     int save_out = dup(STDOUT_FILENO);
-    sprintf(tmp, "%s.dot",name);
+    sprintf(tmp, "./sol/%s-l%d.dot",name,pathLength);
     int fp = open(tmp, O_CREAT | O_RDWR | O_TRUNC, 0777);
     close(1);
     dup2(fp,1);
     printf ("digraph %s{\n",name);
     for(int graphNumber = 0; graphNumber < numGraph; graphNumber++){
-        /*printf("graph number = %d\n",graphNumber);
-        printGraph(graphs[graphNumber]);
-        printf("phi1 = %s\n",subPhi1(ctx, graphs, numGraph, pathLength));
-        printf("node name = %s\n",getNodeName(graphs[graphNumber],subPhi1(ctx, graphs, numGraph, pathLength)));
-
-valueOfVarInModel(ctx, model, getNodeVariable(ctx,i,0,pathLength,u))
-*/
         int tab[2];
-        get_source_and_destination(ctx, model, graphs, graphNumber, pathLength, tab);
+        get_source_and_destination(ctx, model, graphs[graphNumber], graphNumber, pathLength, tab);
         printf ("_%d_%s [initial=1,color=green][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],tab[0]));
         printf ("_%d_%s [final=1,color=red][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],tab[1]));
         printf ("_%d_",graphNumber);
-        printPathsFromModel(ctx, model, graphs, numGraph, pathLength);
+        oneGraphPrintPathsFromModel(ctx, model, graphs[graphNumber], graphNumber, pathLength);
     }
     printf ("}\n");
     dup2(save_out, STDOUT_FILENO);
-    //dup2(1,fp);
-    // close the file //  
     close(fp);
 }
 

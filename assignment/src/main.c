@@ -132,7 +132,7 @@ int main(int argc, char* argv[]){
             if(DEFAULT_DISP_f){
                 Z3_model model = getModelFromSatFormula(ctx, formula);
                 int k = getSolutionLengthFromModel(ctx,model,graph);
-                createDotFromModel(ctx, model, graph, numGraph, k, "sol");
+                createDotFromModel(ctx, model, graph, numGraph, k, "result");
             }
             
             /*Z3_model model = getModelFromSatFormula(ctx,absurd);
