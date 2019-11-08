@@ -9,6 +9,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 
 // Renvoie l'entier le plus grand entre a et b
@@ -68,6 +70,7 @@ void graphToPhi1FormulaB(Z3_context ctx, Graph *graphs, unsigned int i, int path
 
 int subPhi2(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     for(int j = 0; j < orderG(graphs[i]); j++){
+        //printf("j = %d\n",j);
         if(isTarget(graphs[i],j)){
             return j;
         }
@@ -361,7 +364,7 @@ void printPathsFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numG
                 }
             }
         }
-        printf("Chemin valide pour le graphe %d\n",i);
+        //printf("Chemin valide pour le graphe %d\n",i);
         for(int k = 0 ; k < pathLength ; k++ ){
             printf("%s -> ",getNodeName(graphs[i],tab[k]));
         }
@@ -369,6 +372,20 @@ void printPathsFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numG
     }
 }
 
+
+
+void get_source_and_destination(Z3_context ctx, Z3_model model, Graph *graphs, int graphNumber, int pathLength, int * tab){
+    //int tab[2];
+    for(int u = 0 ; u < orderG(graphs[graphNumber]) ; u++){
+        if(valueOfVarInModel(ctx, model, getNodeVariable(ctx,graphNumber,0,pathLength,u))){
+            tab[0] = u;
+        }
+        else if(valueOfVarInModel(ctx, model, getNodeVariable(ctx,graphNumber,pathLength,pathLength,u))){
+            tab[1] = u;
+        }
+    }
+    return;
+}
 
 
 // Crée le fichier représentant la solution du problème décrit par model, ou ("result-l%d.dot,pathLength") si name == NULL
@@ -380,16 +397,30 @@ void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGr
         printf("Not enough memory to allocate tmp in createDotFromModel\n");
         exit(EXIT_FAILURE);
     }
+    int save_out = dup(STDOUT_FILENO);
     sprintf(tmp, "%s.dot",name);
-    int fp = open(tmp, O_WRONLY);
-    dup2(1,fp);
+    int fp = open(tmp, O_CREAT | O_RDWR | O_TRUNC, 0777);
+    close(1);
+    dup2(fp,1);
     printf ("digraph %s{\n",name);
     for(int graphNumber = 0; graphNumber < numGraph; graphNumber++){
-        printf ("_%d_%s [initial=1,color=green][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],subPhi1(ctx, graphs, numGraph, pathLength)));
-        printf ("_%d_%s [final=1,color=red][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],subPhi2(ctx, graphs, numGraph, pathLength)));
+        /*printf("graph number = %d\n",graphNumber);
+        printGraph(graphs[graphNumber]);
+        printf("phi1 = %s\n",subPhi1(ctx, graphs, numGraph, pathLength));
+        printf("node name = %s\n",getNodeName(graphs[graphNumber],subPhi1(ctx, graphs, numGraph, pathLength)));
+
+valueOfVarInModel(ctx, model, getNodeVariable(ctx,i,0,pathLength,u))
+*/
+        int tab[2];
+        get_source_and_destination(ctx, model, graphs, graphNumber, pathLength, tab);
+        printf ("_%d_%s [initial=1,color=green][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],tab[0]));
+        printf ("_%d_%s [final=1,color=red][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],tab[1]));
         printf ("_%d_",graphNumber);
         printPathsFromModel(ctx, model, graphs, numGraph, pathLength);
     }
+    printf ("}\n");
+    dup2(save_out, STDOUT_FILENO);
+    //dup2(1,fp);
     // close the file //  
     close(fp);
 }
