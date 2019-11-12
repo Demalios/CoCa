@@ -398,18 +398,51 @@ void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGr
     printf ("digraph %s{\n",name);
     for(int graphNumber = 0; graphNumber < numGraph; graphNumber++){
         int tab[2];
+        //Affichage des sommet de départ et d'arrivé.
         get_source_and_destination(ctx, model, graphs[graphNumber], graphNumber, pathLength, tab);
         printf ("_%d_%s [initial=1,color=green][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],tab[0]));
         printf ("_%d_%s [final=1,color=red][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],tab[1]));
         int numNode = orderG(graphs[graphNumber]);
+        //Affichage de tous les autres sommets, avec du 'lightblue' pour les sommet parcourus.
         for(int ind = 0 ; ind < numNode ; ind++ ){
             if(!isTarget(graphs[graphNumber],ind) && !isSource(graphs[graphNumber],ind)){
-                printf ("_%d_%s ;\n",graphNumber,getNodeName(graphs[graphNumber],ind));
+                bool used = false;
+                for(int j = 0 ; j < pathLength+1 ; j++){
+                    if(valueOfVarInModel(ctx,model,getNodeVariable(ctx,graphNumber,j,pathLength,ind))){
+                        used = true;
+                        break;
+                    }
+                }
+                if(used){
+                    printf ("_%d_%s [style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],ind));
+                }else{
+                    printf ("_%d_%s ;\n",graphNumber,getNodeName(graphs[graphNumber],ind));
+                }
             }
         }
-    
+        //Affichage de tous les arcs, avec du 'blue' pour les arcs parcourus
+        for(int u = 0 ; u < numNode ; u++ ){
+            for(int v = 0 ; v < numNode ; v++ ){
+                if(isEdge(graphs[graphNumber],u,v)){
+                    bool used = false;
+                    for(int j = 0 ; j < pathLength ; j++){
+                        if(valueOfVarInModel(ctx,model,getNodeVariable(ctx,graphNumber,j,pathLength,u)) && valueOfVarInModel(ctx,model,getNodeVariable(ctx,graphNumber,j+1,pathLength,v))){
+                            used = true;
+                            break;
+                        }
+                    }
+                    if(used){
+                        printf ("_%d_%s -> _%d_%s [color=blue];\n",graphNumber,getNodeName(graphs[graphNumber],u),graphNumber,getNodeName(graphs[graphNumber],v));
+                    }else{
+                        printf ("_%d_%s -> _%d_%s;\n",graphNumber,getNodeName(graphs[graphNumber],u),graphNumber,getNodeName(graphs[graphNumber],v));
+                    }
+                }
+            }
+        }
+        /* Pas nécessaire
         printf ("_%d_",graphNumber);
         oneGraphPrintPathsFromModel(ctx, model, graphs[graphNumber], graphNumber, pathLength);
+        */
     }
     printf ("}\n");
     dup2(save_out, STDOUT_FILENO);
@@ -419,7 +452,7 @@ void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGr
 /* Détails nécessaire pour avoir le même .dot que les prof
 Pour tout les graphes :
 
-    Afficher départ et arrivé
+    Afficher départ et arrivé OK
     Afficher tous les autres sommets ( les sommets du chemin sont en 'lightblue' )
     Afficher tous les arcs ( les arcs du chemin sont en 'lightblue' )
 
