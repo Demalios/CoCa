@@ -314,7 +314,7 @@ int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs){
             for(int u = 0 ; u < orderG(graphs[0]) ; u++ ){
                 if(valueOfVarInModel(ctx, model, getNodeVariable(ctx,0,j,k,u))){
                     if(j==0){
-                        if( u)){
+                        if( isSource(graphs[0],u)){
                             numVal++;
                         }else{
                             numVal++;
@@ -401,7 +401,7 @@ void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGr
         get_source_and_destination(ctx, model, graphs[graphNumber], graphNumber, pathLength, tab);
         printf ("_%d_%s [initial=1,color=green][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],tab[0]));
         printf ("_%d_%s [final=1,color=red][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],tab[1]));
-        /* Affichage de tout les autre sommet
+        /* Affichage de tout les sommets
         int numNode = orderG(graphs[graphNumber]);
         for(int ind = 0 ; ind < numNode ; ind++ ){
             if(!isTarget(graphs[graphNumber],ind) && !isSource(graphs[graphNumber],ind)){
