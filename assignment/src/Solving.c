@@ -314,7 +314,7 @@ int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs){
             for(int u = 0 ; u < orderG(graphs[0]) ; u++ ){
                 if(valueOfVarInModel(ctx, model, getNodeVariable(ctx,0,j,k,u))){
                     if(j==0){
-                        if(isSource(graphs[0],u)){
+                        if( u)){
                             numVal++;
                         }else{
                             numVal++;
