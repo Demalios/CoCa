@@ -24,7 +24,7 @@ int main(int argc, char* argv[]){
             printf("-F : To display the computed formula\n");
             printf("-v : To display the parsed graphs\n");
             printf("-t : To display a valid path for each graph of size found in common\n");
-            printf("-f : To create a .dot file in the sol folder with the valid paths written in them\n");
+            printf("-o : To create a .dot file in the sol folder with the valid paths written in them\n");
             numArg ++;
         }
         if(strcmp(argv[i],"-F") == 0){
@@ -39,7 +39,7 @@ int main(int argc, char* argv[]){
             DEFAULT_DISP_G = true;
             numArg ++;
         }
-        if(strcmp(argv[i],"-f") == 0){
+        if(strcmp(argv[i],"-o") == 0){
             DEFAULT_DISP_f = true;
             numArg ++;
         }
