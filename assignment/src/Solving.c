@@ -401,12 +401,14 @@ void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGr
         get_source_and_destination(ctx, model, graphs[graphNumber], graphNumber, pathLength, tab);
         printf ("_%d_%s [initial=1,color=green][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],tab[0]));
         printf ("_%d_%s [final=1,color=red][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],tab[1]));
+        /* Affichage de tout les autre sommet
         int numNode = orderG(graphs[graphNumber]);
         for(int ind = 0 ; ind < numNode ; ind++ ){
             if(!isTarget(graphs[graphNumber],ind) && !isSource(graphs[graphNumber],ind)){
                 printf ("_%d_%s ;\n",graphNumber,getNodeName(graphs[graphNumber],ind));
             }
         }
+        */
         printf ("_%d_",graphNumber);
         oneGraphPrintPathsFromModel(ctx, model, graphs[graphNumber], graphNumber, pathLength);
     }
