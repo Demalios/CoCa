@@ -284,27 +284,6 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
 }
 
 
-// Génère une formule SAT satisfaisable si et seulement si tous les graphes de graphs contiennent un chemin acceptant de longueur commune.
-
-Z3_ast graphsToFullFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs){
-    int commonLength = getMaxK(graphs,numGraphs);
-    /*
-    int commonLength = orderG(graphs[0]); //vérifier si ça ne commence pas à l'indice 1
-    for(int i = 1; i < numGraphs; i++){
-        commonLength = min(commonLength, orderG(graphs[i]));
-    }
-    */
-    Z3_ast formulaOR[commonLength-1];
-    for(int l = 1; l < commonLength; l++){
-        //printf("test l = %d sur commonlength = %d\n",l,commonLength);
-        formulaOR[l-1] = graphsToPathFormula(ctx, graphs, numGraphs, l);
-        //printf("Formula k = %d, %s created.\n",l,Z3_ast_to_string(ctx,formulaOR[l-1]));
-        //printf("F = %d\n",isSatisfiable(isFormulaSat(ctx,formulaOR[l-1])));
-    }
-    return Z3_mk_or(ctx,commonLength-1,formulaOR);
-}
-
-
 // Obtient la longueur de la solution d'un modèle donné.
 
 int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs){
@@ -347,6 +326,55 @@ int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs){
         }
     }
 }
+
+
+// Génère une formule SAT satisfaisable si et seulement si tous les graphes de graphs contiennent un chemin acceptant de longueur commune.
+
+Z3_ast graphsToFullFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs){
+    int commonLength = getMaxK(graphs,numGraphs);
+    /*
+    int commonLength = orderG(graphs[0]); //vérifier si ça ne commence pas à l'indice 1
+    for(int i = 1; i < numGraphs; i++){
+        commonLength = min(commonLength, orderG(graphs[i]));
+    }
+    */
+    Z3_ast formulaOR[2];
+    int count = 0;
+    int index = 0;
+    printf("a\n");
+    Z3_ast formula = NULL;
+    printf("b\n");
+    Z3_model model = NULL;
+    printf("c\n");
+    //int solLength = -1;
+    for(int l = 1; l < commonLength; l++){
+        //printf("test l = %d sur commonlength = %d\n",l,commonLength);
+        //printf("Formula k = %d, %s created.\n",l,Z3_ast_to_string(ctx,graphsToPathFormula(ctx, graphs, numGraphs, l)));
+        //printf("F = %d\n",isSatisfiable(isFormulaSat(ctx,graphsToPathFormula(ctx, graphs, numGraphs, l))));
+        printf("d, l = %d\n",l);
+        if(isSatisfiable(isFormulaSat(ctx,graphsToPathFormula(ctx, graphs, numGraphs, l))) == 1){
+    printf("e satisfiable\n");
+            formulaOR[index++] = graphsToPathFormula(ctx, graphs, numGraphs, l);
+    printf("f index = %d\n",index);
+            if(count == 1){
+    printf("g, count = %d\n",count);
+                model = getModelFromSatFormula(ctx,Z3_mk_or(ctx,2,formulaOR));
+    printf("h\n");
+                if (getSolutionLengthFromModel(ctx,model,graphs) == l){ index = 0;
+    printf("i, solLength == l = %d\n",l);}
+                else{ index = 1;
+
+    printf("j, solLength != l = %d\n",l);}
+            }else count = 1;
+        } 
+    printf("k\n");
+    }
+    printf("l, 1-index == %d\n",1-index);
+    return formulaOR[1-index];
+}
+
+
+
 
 // Affiche les chemins de longueur pathLength pour tous les graphes décrits dans model.
 
