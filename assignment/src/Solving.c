@@ -456,9 +456,9 @@ void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGr
 /* Détails nécessaire pour avoir le même .dot que les prof
 Pour tout les graphes :
 
-    Afficher départ et arrivé OK
-    Afficher tous les autres sommets ( les sommets du chemin sont en 'lightblue' )
-    Afficher tous les arcs ( les arcs du chemin sont en 'lightblue' )
+    Afficher départ et arrivée OK
+    Afficher tous les autres sommets (les sommets du chemin sont en 'lightblue')
+    Afficher tous les arcs (les arcs du chemin sont en 'blue')
 
 */
 

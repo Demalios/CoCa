@@ -17,6 +17,7 @@ bool DEFAULT_DISP_P = false;
 bool DEFAULT_DISP_s = false;
 bool DEFAULT_DISP_d = false;
 bool DEFAULT_DISP_a = false;
+bool DEFAULT_DISP_f = false;
 int numArg = 1;
 
 bool SAT(Z3_context ctx, Z3_ast formula, Graph * graphs, int numGraph){
@@ -54,14 +55,15 @@ int main(int argc, char* argv[]){
     for(int i = 1 ; i < argc ; i++ ){
         if(strcmp(argv[i],"-h") == 0){
             printf("You can use the following argument :\n");
-            printf("-h : Displays this help.\n");
-            printf("-F : Displays the formula computed (obviously not in this version, but you should really display it in your code).\n");
-            printf("-v : Activate verbose mode (displays parsed graphs).\n");
-            printf("-t : Displays the paths found on the terminal [if not present, only displays the existence of the path].\n");
-            printf("-f : Writes the result with colors in a .dot file. See next option for the name. These files will be produced in the folder 'sol'.\n");
-            printf("-s : Tests separately all formula by depth [if not present: uses the global formula].\n");
-            printf("-d : Only if -s is present. Explore the length in decreasing order. [if not present: in increasing order].\n");
-            printf("-a : Only if -s is present. Computes a result for every length instead of stopping at the first positive result (default behaviour).\n");
+            printf("-h  Displays this help.\n");
+            printf("-F  Displays the formula computed (obviously not in this version, but you should really display it in your code).\n");
+            printf("-v  Activate verbose mode (displays parsed graphs).\n");
+            printf("-t  Displays the paths found on the terminal [if not present, only displays the existence of the path].\n");
+            printf("-f  Writes the result with colors in a .dot file. See next option for the name. These files will be produced in the folder 'sol'.\n");
+            printf("-s  Tests separately all formula by depth [if not present: uses the global formula].\n");
+            printf("-d  Only if -s is present. Explore the length in decreasing order. [if not present: in increasing order].\n");
+            printf("-a  Only if -s is present. Computes a result for every length instead of stopping at the first positive result (default behaviour).\n");
+            printf("-o NAME Writes the output in \"NAME-lLENGTH.dot\" where LENGTH is the length of the solution. Writes several files in this format if both -s and -a are present. [if not present: \"result-lLENGTH.dot\".\n");
             numArg ++;
         }
         if(strcmp(argv[i],"-F") == 0){
@@ -79,9 +81,14 @@ int main(int argc, char* argv[]){
         if(strcmp(argv[i],"-f") == 0){
             DEFAULT_DISP_f = true;
             numArg ++;
+            if(strcmp(argv[i],"-o") == 0){
+                DEFAULT_DISP_o = true;
+                numArg ++;
+                if(argc == numARG+1)
+            }
         }
         if(strcmp(argv[i],"-s") == 0){
-            for(int j = i+1 ; j < argc ; j++ ){
+            for(int j = 0 ; j < argc ; j++ ){
                 if( strcmp(argv[j],"-d") == 0){
                     DEFAULT_DISP_d = true;
                     numArg ++;
