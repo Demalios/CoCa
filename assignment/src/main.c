@@ -61,6 +61,7 @@ int main(int argc, char* argv[]){
             printf("-f : Writes the result with colors in a .dot file. See next option for the name. These files will be produced in the folder 'sol'.\n");
             printf("-s : Tests separately all formula by depth [if not present: uses the global formula].\n");
             printf("-d : Only if -s is present. Explore the length in decreasing order. [if not present: in increasing order].\n");
+            printf("-a : Only if -s is present. Computes a result for every length instead of stopping at the first positive result (default behaviour).\n");
             numArg ++;
         }
         if(strcmp(argv[i],"-F") == 0){
