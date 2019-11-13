@@ -16,17 +16,19 @@ bool DEFAULT_DISP_f = false;
 bool DEFAULT_DISP_P = false;
 bool DEFAULT_DISP_s = false;
 bool DEFAULT_DISP_d = false;
+bool DEFAULT_DISP_a = false;
+int numArg = 1;
 
-void SAT(Z3_context ctx, Z3_ast formula, Graph * graphs, int numGraph){
+bool SAT(Z3_context ctx, Z3_ast formula, Graph * graphs, int numGraph){
     Z3_lbool isSat = isFormulaSat(ctx,formula);
     switch (isSat){
         case Z3_L_FALSE:
             printf("Non\n");
-            break;
+            return false;
 
         case Z3_L_UNDEF:
             printf("We don't know if %s is satisfiable.\n",Z3_ast_to_string(ctx,formula));
-            break;
+            return false;
 
         case Z3_L_TRUE:
             if(DEFAULT_DISP_F){
@@ -44,14 +46,11 @@ void SAT(Z3_context ctx, Z3_ast formula, Graph * graphs, int numGraph){
                 int k = getSolutionLengthFromModel(ctx,model,graphs);
                 createDotFromModel(ctx, model, graphs, numGraph, k, "result");
             }
-            break;
+            return true;
     }
 }
 
 int main(int argc, char* argv[]){
-    
-    int numArg = 1;
-
     for(int i = 1 ; i < argc ; i++ ){
         if(strcmp(argv[i],"-h") == 0){
             printf("You can use the following argument :\n");
@@ -81,9 +80,15 @@ int main(int argc, char* argv[]){
             numArg ++;
         }
         if(strcmp(argv[i],"-s") == 0){
-            if(i+1<argc && strcmp(argv[i+1],"-d") == 0){
-                DEFAULT_DISP_d = true;
-                numArg ++;
+            for(int j = i+1 ; j < argc ; j++ ){
+                if( strcmp(argv[j],"-d") == 0){
+                    DEFAULT_DISP_d = true;
+                    numArg ++;
+                }
+                if( strcmp(argv[j],"-a") == 0){
+                    DEFAULT_DISP_a = true;
+                    numArg ++;
+                }
             }
             DEFAULT_DISP_s = true;
             numArg ++;
@@ -116,13 +121,17 @@ int main(int argc, char* argv[]){
             for(int i = maxK -1 ; i >= 0 ; i--){
                 Z3_ast formula = graphsToPathFormula(ctx,graph,numGraph,i);
                 printf("Pour k = %d : \n",i);
-                SAT(ctx,formula,graph,numGraph);
+                if(SAT(ctx,formula,graph,numGraph) && DEFAULT_DISP_a == false){
+                    break;
+                }
             }
         }else{
             for(int i = 0 ; i < maxK ; i++){
                 Z3_ast formula = graphsToPathFormula(ctx,graph,numGraph,i);
                 printf("Pour k = %d : \n",i);
-                SAT(ctx,formula,graph,numGraph);
+                if(SAT(ctx,formula,graph,numGraph) && DEFAULT_DISP_a == false){
+                    break;
+                }
             }
         }
     }else{
