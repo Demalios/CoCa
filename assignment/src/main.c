@@ -15,6 +15,7 @@ bool DEFAULT_DISP_F = false;
 bool DEFAULT_DISP_f = false;
 bool DEFAULT_DISP_P = false;
 bool DEFAULT_DISP_s = false;
+bool DEFAULT_DISP_d = false;
 
 void SAT(Z3_context ctx, Z3_ast formula, Graph * graphs, int numGraph){
     Z3_lbool isSat = isFormulaSat(ctx,formula);
@@ -54,12 +55,13 @@ int main(int argc, char* argv[]){
     for(int i = 1 ; i < argc ; i++ ){
         if(strcmp(argv[i],"-h") == 0){
             printf("You can use the following argument :\n");
-            printf("-h : Displays this help\n");
-            printf("-F : Displays the formula computed (obviously not in this version, but you should really display it in your code)\n");
-            printf("-v : Activate verbose mode (displays parsed graphs)\n");
+            printf("-h : Displays this help.\n");
+            printf("-F : Displays the formula computed (obviously not in this version, but you should really display it in your code).\n");
+            printf("-v : Activate verbose mode (displays parsed graphs).\n");
             printf("-t : Displays the paths found on the terminal [if not present, only displays the existence of the path].\n");
             printf("-f : Writes the result with colors in a .dot file. See next option for the name. These files will be produced in the folder 'sol'.\n");
-            printf("-s : Tests separately all formula by depth [if not present: uses the global formula]\n");
+            printf("-s : Tests separately all formula by depth [if not present: uses the global formula].\n");
+            printf("-d : Only if -s is present. Explore the length in decreasing order. [if not present: in increasing order].\n");
             numArg ++;
         }
         if(strcmp(argv[i],"-F") == 0){
@@ -79,6 +81,10 @@ int main(int argc, char* argv[]){
             numArg ++;
         }
         if(strcmp(argv[i],"-s") == 0){
+            if(i+1<argc && strcmp(argv[i+1],"-d") == 0){
+                DEFAULT_DISP_d = true;
+                numArg ++;
+            }
             DEFAULT_DISP_s = true;
             numArg ++;
         }
@@ -106,10 +112,18 @@ int main(int argc, char* argv[]){
                 maxK;
             }
         }
-        for(int i = 0 ; i < maxK ; i++){
-            Z3_ast formula = graphsToPathFormula(ctx,graph,numGraph,i);
-            printf("Pour k = %d : \n",i);
-            SAT(ctx,formula,graph,numGraph);
+        if(DEFAULT_DISP_d){
+            for(int i = maxK -1 ; i >= 0 ; i--){
+                Z3_ast formula = graphsToPathFormula(ctx,graph,numGraph,i);
+                printf("Pour k = %d : \n",i);
+                SAT(ctx,formula,graph,numGraph);
+            }
+        }else{
+            for(int i = 0 ; i < maxK ; i++){
+                Z3_ast formula = graphsToPathFormula(ctx,graph,numGraph,i);
+                printf("Pour k = %d : \n",i);
+                SAT(ctx,formula,graph,numGraph);
+            }
         }
     }else{
         Z3_ast formula = graphsToFullFormula(ctx,graph,numGraph);
