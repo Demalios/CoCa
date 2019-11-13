@@ -29,6 +29,14 @@ int min(int a , int b){
     return a;
 }
 
+int getMaxK(Graph * graph, int numGraph){
+    int maxK = orderG(graph[0]); //vérifier si ça ne commence pas à l'indice 1
+    for(int i = 1; i < numGraph; i++){
+        maxK = min(maxK, orderG(graph[i]));
+    }
+    return maxK;
+}
+
 // Génère une formule consistant en une variable représentant le fait que node du graphe number soit à la position position d'un chemin acceptant.
 
 Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node){
@@ -53,15 +61,6 @@ Z3_ast graphToPhi1Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
         }
     }
 }
-/*
-void graphToPhi1FormulaB(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength, Z3_ast * ret){
-    for(int j = 0; j < orderG(graphs[i]); j++){
-        if(isSource(graphs[i],j)){
-            ret[0] = getNodeVariable(ctx,i,0,pathLength,j);
-        }
-    }
-}
-*/
 // Génère la sous-formule ɸ​2 pour le graphe i. ("Point d'arrivée t")
 
 Z3_ast graphToPhi2Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
@@ -288,10 +287,13 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
 // Génère une formule SAT satisfaisable si et seulement si tous les graphes de graphs contiennent un chemin acceptant de longueur commune.
 
 Z3_ast graphsToFullFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs){
+    int commonLength = getMaxK(graphs,numGraphs);
+    /*
     int commonLength = orderG(graphs[0]); //vérifier si ça ne commence pas à l'indice 1
     for(int i = 1; i < numGraphs; i++){
         commonLength = min(commonLength, orderG(graphs[i]));
     }
+    */
     Z3_ast formulaOR[commonLength-1];
     for(int l = 1; l < commonLength; l++){
         //printf("test l = %d sur commonlength = %d\n",l,commonLength);
@@ -317,6 +319,7 @@ int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs){
                         if( isSource(graphs[0],u)){
                             numVal++;
                         }else{
+                            // Falsification des valeurs si un sommets n'étant pas le point de départ est proposé pour l'étape 0.
                             numVal++;
                             numVal++;
                         }
@@ -325,6 +328,7 @@ int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs){
                             if(isTarget(graphs[0],u)){
                                 numVal++;
                             }else{
+                                // Falsification des valeurs si un sommets n'étant pas le point d'arrivé est proposé pour l'étape k.
                                 numVal++;
                                 numVal++;
                             }

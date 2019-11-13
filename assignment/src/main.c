@@ -15,7 +15,7 @@ bool DEFAULT_DISP_F = false;
 bool DEFAULT_DISP_f = false;
 bool DEFAULT_DISP_P = false;
 bool DEFAULT_DISP_s = false;
-    
+
 void SAT(Z3_context ctx, Z3_ast formula, Graph * graphs, int numGraph){
     Z3_lbool isSat = isFormulaSat(ctx,formula);
     switch (isSat){
@@ -96,8 +96,25 @@ int main(int argc, char* argv[]){
         }
     }
     Z3_context ctx = makeContext();
-    Z3_ast formula = graphsToFullFormula(ctx,graph,numGraph);
-    SAT(ctx,formula,graph,numGraph);
+    //Z3_ast formula = graphsToFullFormula(ctx,graph,numGraph);
+    if(DEFAULT_DISP_s){
+        int maxK = orderG(graph[0]); //vérifier si ça ne commence pas à l'indice 1
+        for(int i = 1; i < numGraph; i++){
+            if(maxK>orderG(graph[i])){
+                orderG(graph[i]);
+            }else{
+                maxK;
+            }
+        }
+        for(int i = 0 ; i < maxK ; i++){
+            Z3_ast formula = graphsToPathFormula(ctx,graph,numGraph,i);
+            printf("Pour k = %d : \n",i);
+            SAT(ctx,formula,graph,numGraph);
+        }
+    }else{
+        Z3_ast formula = graphsToFullFormula(ctx,graph,numGraph);
+        SAT(ctx,formula,graph,numGraph);
+    }
     /*
     Z3_lbool isSat = isFormulaSat(ctx,formula);
     switch (isSat){
