@@ -10,6 +10,9 @@
 #include <math.h>
 #include "Solving.h"
 
+#define mini(a,b) (a<=b?a:b)
+#define MAX_NAME_LENGTH 50
+
 bool DEFAULT_DISP_G = false;
 bool DEFAULT_DISP_F = false;
 bool DEFAULT_DISP_f = false;
@@ -17,7 +20,8 @@ bool DEFAULT_DISP_P = false;
 bool DEFAULT_DISP_s = false;
 bool DEFAULT_DISP_d = false;
 bool DEFAULT_DISP_a = false;
-bool DEFAULT_DISP_f = false;
+bool DEFAULT_DISP_o = false;
+char DEFAULT_FILE_NAME[MAX_NAME_LENGTH] = "result";
 int numArg = 1;
 
 bool SAT(Z3_context ctx, Z3_ast formula, Graph * graphs, int numGraph){
@@ -38,14 +42,14 @@ bool SAT(Z3_context ctx, Z3_ast formula, Graph * graphs, int numGraph){
             printf("Oui\n");
             
             if(DEFAULT_DISP_P){
-                Z3_model model = getModelFromSatFormula( ctx, formula);
+                Z3_model model = getModelFromSatFormula(ctx, formula);
                 int k = getSolutionLengthFromModel(ctx,model,graphs);
                 printPathsFromModel( ctx, model, graphs, numGraph, k);
             }
             if(DEFAULT_DISP_f){
                 Z3_model model = getModelFromSatFormula(ctx, formula);
                 int k = getSolutionLengthFromModel(ctx,model,graphs);
-                createDotFromModel(ctx, model, graphs, numGraph, k, "result");
+                createDotFromModel(ctx, model, graphs, numGraph, k, DEFAULT_FILE_NAME);
             }
             return true;
     }
@@ -81,10 +85,13 @@ int main(int argc, char* argv[]){
         if(strcmp(argv[i],"-f") == 0){
             DEFAULT_DISP_f = true;
             numArg ++;
-            if(strcmp(argv[i],"-o") == 0){
-                DEFAULT_DISP_o = true;
-                numArg ++;
-                if(argc == numARG+1)
+            for(int j = 0 ; j < argc-1 ; j++){
+                if(strcmp(argv[j],"-o") == 0 && strstr(argv[j+1], ".dot") == NULL && argv[j+1][0] != '-'){
+                    strncpy (DEFAULT_FILE_NAME, argv[j+1], mini(strlen(argv[j+1]),MAX_NAME_LENGTH));
+                    DEFAULT_FILE_NAME[strlen(argv[j+1])] = '\0';
+                    DEFAULT_DISP_o = true;
+                    numArg += 2;
+                }
             }
         }
         if(strcmp(argv[i],"-s") == 0){
@@ -119,11 +126,7 @@ int main(int argc, char* argv[]){
     if(DEFAULT_DISP_s){
         int maxK = orderG(graph[0]); //vérifier si ça ne commence pas à l'indice 1
         for(int i = 1; i < numGraph; i++){
-            if(maxK>orderG(graph[i])){
-                orderG(graph[i]);
-            }else{
-                maxK;
-            }
+            maxK = mini(maxK,orderG(graph[i]));
         }
         if(DEFAULT_DISP_d){
             for(int i = maxK -1 ; i >= 0 ; i--){
