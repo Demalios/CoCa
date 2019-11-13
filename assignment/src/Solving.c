@@ -338,39 +338,43 @@ Z3_ast graphsToFullFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
         commonLength = min(commonLength, orderG(graphs[i]));
     }
     */
+
+
+    /*V1 (pas sûr, car prend les chemins de plusieurs tailles acceptantes)
+    Z3_ast formulaOR[commonLength];
+    for(int l = 1; l < commonLength; l++){
+        if(isSatisfiable(isFormulaSat(ctx,graphsToPathFormula(ctx, graphs, numGraphs, l))) == 1){
+            formulaOR[index++] = graphsToPathFormula(ctx, graphs, numGraphs, l);
+        } 
+    }
+    return Z3_mk_or(ctx,count,formulaOR);
+    */
+
+    //V2 (toujours pas sûr, je crois qu'il faut re-parcourir tout le modèle pour ne garder que les chemins acceptants, temoins de la solution, pas juste les chemins de taille solution) 
     Z3_ast formulaOR[2];
     int count = 0;
     int index = 0;
-    printf("a\n");
-    Z3_ast formula = NULL;
-    printf("b\n");
     Z3_model model = NULL;
-    printf("c\n");
-    //int solLength = -1;
     for(int l = 1; l < commonLength; l++){
         //printf("test l = %d sur commonlength = %d\n",l,commonLength);
         //printf("Formula k = %d, %s created.\n",l,Z3_ast_to_string(ctx,graphsToPathFormula(ctx, graphs, numGraphs, l)));
         //printf("F = %d\n",isSatisfiable(isFormulaSat(ctx,graphsToPathFormula(ctx, graphs, numGraphs, l))));
-        printf("d, l = %d\n",l);
         if(isSatisfiable(isFormulaSat(ctx,graphsToPathFormula(ctx, graphs, numGraphs, l))) == 1){
-    printf("e satisfiable\n");
-            formulaOR[index++] = graphsToPathFormula(ctx, graphs, numGraphs, l);
-    printf("f index = %d\n",index);
+            formulaOR[index] = graphsToPathFormula(ctx, graphs, numGraphs, l);
             if(count == 1){
-    printf("g, count = %d\n",count);
                 model = getModelFromSatFormula(ctx,Z3_mk_or(ctx,2,formulaOR));
-    printf("h\n");
-                if (getSolutionLengthFromModel(ctx,model,graphs) == l){ index = 0;
-    printf("i, solLength == l = %d\n",l);}
-                else{ index = 1;
-
-    printf("j, solLength != l = %d\n",l);}
-            }else count = 1;
+                if (getSolutionLengthFromModel(ctx,model,graphs) == l) index = 1-index;
+                else index = index;
+            }else{
+                count = 1;
+                index = 1;
+            }
         } 
-    printf("k\n");
     }
-    printf("l, 1-index == %d\n",1-index);
     return formulaOR[1-index];
+
+    //V3 :
+    // essayer de ne garder que les chemins témoins de la solution
 }
 
 
