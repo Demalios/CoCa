@@ -12,7 +12,7 @@ OBJ 		= build/Parser.o build/Lexer.o $(OBJPARS) $(OBJSRC)
 all: equalPath doc
 
 equalPath: $(OBJ) 
-		$(CC) $(CFLAGS) $(OBJ) -o equalPath
+		$(CC) $(CFLAGS) $(OBJ) -lz3 -o equalPath
 
 build/Lexer.o: parser/Lexer.c parser/Parser.c
 		mkdir -p build
