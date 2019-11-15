@@ -25,6 +25,10 @@ char DEFAULT_FILE_NAME[MAX_NAME_LENGTH] = "result";
 int numArg = 1;
 
 bool SAT(Z3_context ctx, Z3_ast formula, Graph * graphs, int numGraph){
+    if(formula==NULL){
+        printf("Non\n");
+        return false;
+    }
     Z3_lbool isSat = isFormulaSat(ctx,formula);
     switch (isSat){
         case Z3_L_FALSE:

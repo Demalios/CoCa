@@ -125,6 +125,7 @@ Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
             free(formulaAND3);
         }
         formulaAND1[j] = Z3_mk_and(ctx,orderG(graphs[i]),formulaAND2);
+        free(formulaAND2);
     }
     Z3_ast finalAND = Z3_mk_and(ctx,pathLength+1,formulaAND1);
     free(formulaAND1);
@@ -243,12 +244,11 @@ int isSatisfiable(Z3_lbool val){
 
 Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs, int pathLength){
     Z3_ast* formulaAND = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength);
-    //Z3_ast formulaAND[pathLength];
     if(formulaAND == NULL){
         printf("Not enough memory to allocate formulaLittleAND in graphsToPathFormula\n");
         exit(EXIT_FAILURE);
     }
-    Z3_ast* formulaLittleAND = (Z3_ast*)malloc(sizeof(Z3_ast)*6); //nombre magique
+    Z3_ast* formulaLittleAND = (Z3_ast*)malloc(sizeof(Z3_ast)*6); // 6 = number of formula
     if(formulaLittleAND == NULL){
         printf("Not enough memory to allocate formulaLittleAND in graphsToPathFormula\n");
         exit(EXIT_FAILURE);
@@ -340,26 +340,33 @@ Z3_ast graphsToFullFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
     */
 
 
-    /*V1 (pas sûr, car prend les chemins de plusieurs tailles acceptantes)
+    //V1 (pas sûr, car prend les chemins de plusieurs tailles acceptantes)
+    int index = 0;
     Z3_ast formulaOR[commonLength];
     for(int l = 1; l < commonLength; l++){
-        if(isSatisfiable(isFormulaSat(ctx,graphsToPathFormula(ctx, graphs, numGraphs, l))) == 1){
-            formulaOR[index++] = graphsToPathFormula(ctx, graphs, numGraphs, l);
+        Z3_ast formulaToTest = graphsToPathFormula(ctx, graphs, numGraphs, l);
+        if(isSatisfiable(isFormulaSat(ctx,formulaToTest)) == 1){
+            formulaOR[index] = formulaToTest;
+            index++;
         } 
     }
-    return Z3_mk_or(ctx,count,formulaOR);
-    */
+    Z3_ast x = Z3_mk_or(ctx,index,formulaOR);
+    return x;
+    /*/
 
-    //V2 (toujours pas sûr, je crois qu'il faut re-parcourir tout le modèle pour ne garder que les chemins acceptants, temoins de la solution, pas juste les chemins de taille solution) 
+    /*V2 (toujours pas sûr, je crois qu'il faut re-parcourir tout le modèle pour ne garder que les chemins acceptants, temoins de la solution, pas juste les chemins de taille solution) 
     Z3_ast formulaOR[2];
     int count = 0;
     int index = 0;
     Z3_model model = NULL;
+    printf("la\n");
     for(int l = 1; l < commonLength; l++){
+        printf("la2\n");
         //printf("test l = %d sur commonlength = %d\n",l,commonLength);
         //printf("Formula k = %d, %s created.\n",l,Z3_ast_to_string(ctx,graphsToPathFormula(ctx, graphs, numGraphs, l)));
         //printf("F = %d\n",isSatisfiable(isFormulaSat(ctx,graphsToPathFormula(ctx, graphs, numGraphs, l))));
         if(isSatisfiable(isFormulaSat(ctx,graphsToPathFormula(ctx, graphs, numGraphs, l))) == 1){
+            printf("la3\n");
             formulaOR[index] = graphsToPathFormula(ctx, graphs, numGraphs, l);
             if(count == 1){
                 model = getModelFromSatFormula(ctx,Z3_mk_or(ctx,2,formulaOR));
@@ -369,10 +376,12 @@ Z3_ast graphsToFullFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
                 count = 1;
                 index = 1;
             }
-        } 
+        }
     }
+    printf("la4\n");
+    printf("index : %d\n",index);
     return formulaOR[1-index];
-
+    */
     //V3 :
     // essayer de ne garder que les chemins témoins de la solution
 }
