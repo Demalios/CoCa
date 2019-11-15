@@ -102,7 +102,7 @@ Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node
 Z3_ast graphToPhi1Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     for(int j = 0; j < orderG(graphs[i]); j++){
         if(isSource(graphs[i],j)){
-            return getNodeVariable(ctx,i,0,pathLength,j)            ;
+            return getNodeVariable(ctx,i,0,pathLength,j);
         }
     }
 }
@@ -175,7 +175,6 @@ Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
             }
             int AND3index = 0;
             Z3_ast* formulaOR = (Z3_ast*)malloc(sizeof(Z3_ast)*2);
-            Z3_ast formulaOR[2];
             if(formulaOR == NULL){
                 printf("Not enough memory to allocate formulaOR in Phi4\n");
                 exit(EXIT_FAILURE);
@@ -188,7 +187,7 @@ Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
                 }
             }
             free(formulaOR);
-            formulaAND2[u] = Z3_mk_and(ctx,orderG(graphs[i])-1,formulaAND3);
+            formulaAND2[u] = Z3_mk_and(ctx,AND3index/*orderG(graphs[i])-1*/,formulaAND3);
             free(formulaAND3);
         }
         formulaAND1[j] = Z3_mk_and(ctx,orderG(graphs[i]),formulaAND2);
@@ -232,7 +231,7 @@ Z3_ast graphToPhi5Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
                     id++;
                 }
             }
-            formulaAND2[j] = Z3_mk_and(ctx,pathLength,formulaAND3);
+            formulaAND2[j] = Z3_mk_and(ctx,id/*pathLength*/,formulaAND3);
         }
         formulaAND1[u] = Z3_mk_and(ctx,pathLength+1,formulaAND2);
         free(formulaAND3);
@@ -266,7 +265,7 @@ Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
                 }
             }
         }
-        formulaAND[j] = Z3_mk_or(ctx,sizeG(graphs[i]),formulaOR);
+        formulaAND[j] = Z3_mk_or(ctx,ind/*sizeG(graphs[i])*/,formulaOR);
     }
     return Z3_mk_and(ctx,pathLength,formulaAND);
 }
@@ -320,8 +319,9 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
         formulaLittleAND[5] = graphToPhi6Formula(ctx, graphs, i, pathLength);
         formulaAND[i] = Z3_mk_and(ctx,6,formulaLittleAND);
     }
-    free(formulaLittleAND);
+    
     Z3_ast x = Z3_mk_and(ctx,numGraphs,formulaAND);
+    free(formulaLittleAND);
     free(formulaAND);
     return x;
 }
@@ -458,7 +458,7 @@ void get_source_and_destination(Z3_context ctx, Z3_model model, Graph graph, int
     for(int u = 0 ; u < orderG(graph) ; u++){
         if(valueOfVarInModel(ctx, model, getNodeVariable(ctx,graphNumber,0,pathLength,u))){
             tab[0] = u;
-        }
+        }numGraphs
         else if(valueOfVarInModel(ctx, model, getNodeVariable(ctx,graphNumber,pathLength,pathLength,u))){
             tab[1] = u;
         }
@@ -537,6 +537,7 @@ void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGr
     printf ("}\n");
     dup2(save_out, STDOUT_FILENO);
     close(fp);
+    free(tmp);
 }
 
 #endif
