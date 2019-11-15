@@ -1,3 +1,13 @@
+/**
+ * @file Solving.c
+ * @author Alan Aneas & Alexis Cataldi (alan.aneas@etu.u-bordeaux.fr & alexis.cataldi@etu.u-bodeaux.fr)
+ * @brief  An implementation of the Coca project for 2019 year. Convert a set of graphs to a formula true if and only if they all contain a simple accepting path
+ *         of a given length, and provides functions to display the result if the formula is satisfiable.
+ * @version 1
+ * 
+ * 
+ */
+
 #ifndef COCA_SOLVING_H_
 #define COCA_SOLVING_H_
 
@@ -13,8 +23,13 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-// Renvoie l'entier le plus grand entre a et b
-
+/**
+ * @brief Small function to return the maximum between the two parameter
+ * 
+ * @param a, an integer
+ * @param b, another integer
+ * @return either a or b depending on which one is bigger
+ */
 int max(int a , int b){
     if(a<b){
         return b;
@@ -22,6 +37,13 @@ int max(int a , int b){
     return a;
 }
 
+/**
+ * @brief Small function to return the minimum between the two parameter
+ * 
+ * @param a, an integer
+ * @param b, another integer
+ * @return either a or b depending on which one is smaller
+ */
 int min(int a , int b){
     if(a>b){
         return b;
@@ -29,6 +51,13 @@ int min(int a , int b){
     return a;
 }
 
+/**
+ * @brief Small function to return the maximum value of the common length
+ * 
+ * @param graph, a list containing the graphs
+ * @param numGraph, an int corresponding to the number of graphs in graph
+ * @return maxK, the maximum value of the common length
+ */
 int getMaxK(Graph * graph, int numGraph){
     int maxK = orderG(graph[0]); //vérifier si ça ne commence pas à l'indice 1
     for(int i = 1; i < numGraph; i++){
@@ -37,8 +66,17 @@ int getMaxK(Graph * graph, int numGraph){
     return maxK;
 }
 
-// Génère une formule consistant en une variable représentant le fait que node du graphe number soit à la position position d'un chemin acceptant.
-
+/**
+ * @brief Generates a formula consisting of a variable representing the fact that @p node of graph number @p number is at position @p position of an accepting path.
+ * Génère une formule consistant en une variable représentant le fait que node du graphe number soit à la position position d'un chemin acceptant.
+ * 
+ * @param ctx, The solver context. Le contexte du solveur.
+ * @param number, The number of the graph. Le numéro du graphe.
+ * @param position, The position in the path. La position du chemin.
+ * @param k, The mysterious k from the subject of this assignment. Le k dans x_i,j,k,q.
+ * @param node, The node identifier. L'identifiant du noeud.
+ * @return Z3_ast, The formula. La formule.
+ */
 Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node){
     char* str = (char*)malloc(sizeof(char)*(int)ceil(10+log10(max(number,1))+log10(max(position,1))+log10(max(k,1))+log10(max(node,1))));
     if(str == NULL){
@@ -48,12 +86,19 @@ Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node
     sprintf(str, "X_%d,%d,%d,%d", (number+1), position, k, node);
     Z3_ast x = mk_bool_var(ctx, str);
     free(str);
-    return x; //son nom sera x_i,j,k,q
+    return x; // His name will be X_i,j,k,q ( i = number, j = position, k = k, q = node )
 }
 
 
-// Génère la sous-formule ɸ​1 pour le graphe i. ("Point de départ s")
-
+/**
+ * @brief A function used to build our ɸ1 formula
+ * 
+ * @param ctx, The solver context.
+ * @param graphs, An array of graphs.
+ * @param i, The number of graphs in @p graphs.
+ * @param pathLength, The length of the path to check.
+ * @return Z3_ast, The formula.
+ */
 Z3_ast graphToPhi1Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     for(int j = 0; j < orderG(graphs[i]); j++){
         if(isSource(graphs[i],j)){
@@ -61,8 +106,16 @@ Z3_ast graphToPhi1Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
         }
     }
 }
-// Génère la sous-formule ɸ​2 pour le graphe i. ("Point d'arrivée t")
 
+/**
+ * @brief A function used to build our ɸ2 formula
+ * 
+ * @param ctx, The solver context.
+ * @param graphs, An array of graphs.
+ * @param i, The number of graphs in @p graphs.
+ * @param pathLength, The length of the path to check.
+ * @return Z3_ast, The formula.
+ */
 Z3_ast graphToPhi2Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     for(int j = 0; j < orderG(graphs[i]); j++){
         //printf("j = %d\n",j);
@@ -72,8 +125,15 @@ Z3_ast graphToPhi2Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
     }
 }
 
-// Génère la sous-formule ɸ​3 pour le graphe i. ("Au moins 1 sommet par position")
-
+/**
+ * @brief A function used to build our ɸ3 formula
+ * 
+ * @param ctx, The solver context.
+ * @param graphs, An array of graphs.
+ * @param i, The number of graphs in @p graphs.
+ * @param pathLength, The length of the path to check.
+ * @return Z3_ast, The formula.
+ */
 Z3_ast graphToPhi3Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     Z3_ast formulaAND[pathLength+1]; 
     for(int j = 0 ; j <= pathLength ; j++ ){
@@ -86,8 +146,15 @@ Z3_ast graphToPhi3Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
     return Z3_mk_and(ctx,pathLength+1,formulaAND);
 }
 
-// Génère la sous-formule ɸ​4 pour le graphe i. ("Au plus 1 sommet par position")
-
+/**
+ * @brief A function used to build our ɸ4 formula
+ * 
+ * @param ctx, The solver context.
+ * @param graphs, An array of graphs.
+ * @param i, The number of graphs in @p graphs.
+ * @param pathLength, The length of the path to check.
+ * @return Z3_ast, The formula.
+ */
 Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     Z3_ast* formulaAND1 = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength+1);
     if(formulaAND1 == NULL){
@@ -114,7 +181,6 @@ Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
             }
             for(int v = 0 ; v < orderG(graphs[i]) ; v++){
                 if(v!=u){
-                    //Z3_ast formulaOR[2]; //nombre magique
                     formulaOR[0] = Z3_mk_not(ctx,getNodeVariable(ctx,i,j,pathLength,u));
                     formulaOR[1] = Z3_mk_not(ctx,getNodeVariable(ctx,i,j,pathLength,v));
                     formulaAND3[AND3index++] = Z3_mk_or(ctx,2,formulaOR);
@@ -132,8 +198,15 @@ Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
     return finalAND;
 }
 
-// Génère la sous-formule ɸ​5 pour le graphe i. ("Chaque sommet apparaît au plus une fois")
-
+/**
+ * @brief A function used to build our ɸ5 formula
+ * 
+ * @param ctx, The solver context.
+ * @param graphs, An array of graphs.
+ * @param i, The number of graphs in @p graphs.
+ * @param pathLength, The length of the path to check.
+ * @return Z3_ast, The formula.
+ */
 Z3_ast graphToPhi5Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     Z3_ast formulaAND1[orderG(graphs[i])];
     Z3_ast* formulaAND2 = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength+1);
@@ -167,19 +240,15 @@ Z3_ast graphToPhi5Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
     return Z3_mk_and(ctx,orderG(graphs[i]),formulaAND1);;
 }
 
-// Renvoie le nombre de voisin d'un sommet ( Ancienne version )
-/*
-int numberNeighbour(Graph g, int u){
-    int n = 0 ;
-    for(int v = 0 ; v < orderG(g) ; v++ ){
-        if(isEdge(g,u,v)){
-            n ++;
-        }
-    }
-    return n;
-}
-*/
-// Génère la sous-formule ɸ​6 pour le graph i. ("Chemin de taille k continue")
+/**
+ * @brief A function used to build our ɸ6 formula
+ * 
+ * @param ctx, The solver context.
+ * @param graphs, An array of graphs.
+ * @param i, The number of graphs in @p graphs.
+ * @param pathLength, The length of the path to check.
+ * @return Z3_ast, The formula.
+ */
 Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
     Z3_ast formulaAND[pathLength];
     for(int j = 0 ; j <= pathLength - 1; j++ ){
@@ -200,32 +269,13 @@ Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
     }
     return Z3_mk_and(ctx,pathLength,formulaAND);
 }
-/* ( Ancienne version )
-Z3_ast graphToPhi6Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pathLength){
-    Z3_ast formulaAND1[pathLength];
-    for(int j = 0 ; j <= pathLength -1; j++ ){
-        Z3_ast formulaAND2[orderG(graphs[i])];
-        for(int u = 0 ; u < orderG(graphs[i]) ; u++ ){
-            int numN = numberNeighbour(graphs[i],u);
-            Z3_ast formulaAND3[2];
-            formulaAND3[0] = getNodeVariable(ctx,i,j,pathLength,u);
-            Z3_ast formulaOR[numN];
-            int id = 0;
-            for(int v = 0 ; v < orderG(graphs[i]) ; v++){
-                if(isEdge(graphs[i],u,v)){
-                    formulaOR[id] = getNodeVariable(ctx,i,j+1,pathLength,v);
-                    id ++;
-                }
-            }
-            formulaAND3[1] = Z3_mk_or(ctx,numN,formulaOR);
-            formulaAND2[u] = Z3_mk_and(ctx,2,formulaAND3);
-        }
-        formulaAND1[j] = Z3_mk_or(ctx,orderG(graphs[i]),formulaAND2);
-    }
-    return Z3_mk_and(ctx,pathLength,formulaAND1);
-}
-*/
 
+/**
+ * @brief Small function returning a different value depending on the returned value of isFormulaSat
+ * 
+ * @param val, A Z3_bool returned by isFormulaSat
+ * @return An integer ( -1 if the formula wasn't SAT, 0 if it was not determined & 1 if it is SAT )
+ */
 int isSatisfiable(Z3_lbool val){
     switch (val)
         {
@@ -240,8 +290,15 @@ int isSatisfiable(Z3_lbool val){
         }
 }
 
-// Génère une formule SAT satisfaisable si et seulement si tous les graphes de graphs contiennent un chemin acceptant de longueur pathLength.
-
+/**
+ * @brief Generates a SAT formula satisfiable if and only if all graphs of @p graphs contain an accepting path of length @p pathLength.
+ * 
+ * @param ctx, The solver context.
+ * @param graphs, An array of graphs.
+ * @param numGraphs, The number of graphs in @p graphs.
+ * @param pathLength, The length of the path to check.
+ * @return Z3_ast, The formula.
+ */
 Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs, int pathLength){
     Z3_ast* formulaAND = (Z3_ast*)malloc(sizeof(Z3_ast)*pathLength);
     if(formulaAND == NULL){
@@ -255,27 +312,12 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
     }
     for(int i = 0 ; i < numGraphs ; i++){
         formulaLittleAND[0] = graphToPhi1Formula(ctx, graphs, i, pathLength);
-        //printf("Formula 1 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[0]));
-        //printf("F1 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[0])));
-        //Z3_model model = getModelFromSatFormula(ctx,absurd);
         formulaLittleAND[1] = graphToPhi2Formula(ctx, graphs, i, pathLength);
-        //printf("Formula 2 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[1]));
-        //printf("F2 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[1])));
         formulaLittleAND[2] = graphToPhi3Formula(ctx, graphs, i, pathLength);
-        //printf("Formula 3 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[2]));
-        //printf("F3 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[2])));
         formulaLittleAND[3] = graphToPhi4Formula(ctx, graphs, i, pathLength);
-        //printf("Formula 4 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[3]));
-        //printf("F4 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[3])));
         formulaLittleAND[4] = graphToPhi5Formula(ctx, graphs, i, pathLength);
-        //printf("Formula 5 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[4]));
-        //printf("F5 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[4])));
         formulaLittleAND[5] = graphToPhi6Formula(ctx, graphs, i, pathLength);
-        //formulaLittleAND[5] = phi6test(ctx, graphs, i, pathLength);
-        //printf("Formula 6 %s created.\n",Z3_ast_to_string(ctx,formulaLittleAND[5]));
-        //printf("F6 = %d\n",isSatisfiable(isFormulaSat(ctx,formulaLittleAND[5])));
         formulaAND[i] = Z3_mk_and(ctx,6,formulaLittleAND);
-        //printf("Formule finale = %d\n",isSatisfiable(isFormulaSat(ctx,formulaAND[i])));
     }
     free(formulaLittleAND);
     Z3_ast x = Z3_mk_and(ctx,numGraphs,formulaAND);
@@ -284,8 +326,14 @@ Z3_ast graphsToPathFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
 }
 
 
-// Obtient la longueur de la solution d'un modèle donné.
-
+/**
+ * @brief Gets the length of the solution from a given model.
+ * 
+ * @param ctx, The solver context. 
+ * @param model, A variable assignment. 
+ * @param graphs, An array of graphs.
+ * @return int, The length of a common simple accepting path in all graphs from @p graphs
+ */ 
 int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs){
     int maxLength = orderG(graphs[0]);
     for(int k = 1 ; k < maxLength+1 ; k++ ){
@@ -298,7 +346,7 @@ int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs){
                         if( isSource(graphs[0],u)){
                             numVal++;
                         }else{
-                            // Falsification des valeurs si un sommets n'étant pas le point de départ est proposé pour l'étape 0.
+                            // Falsification of the values if a node which isn't the starting point is proposed for the step 0. 
                             numVal++;
                             numVal++;
                         }
@@ -307,7 +355,7 @@ int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs){
                             if(isTarget(graphs[0],u)){
                                 numVal++;
                             }else{
-                                // Falsification des valeurs si un sommets n'étant pas le point d'arrivé est proposé pour l'étape k.
+                                // Falsification of the values if a node which isn't the ending point is proposed for the step k. 
                                 numVal++;
                                 numVal++;
                             }
@@ -328,19 +376,17 @@ int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs){
 }
 
 
-// Génère une formule SAT satisfaisable si et seulement si tous les graphes de graphs contiennent un chemin acceptant de longueur commune.
-
+/**
+ * @brief Generates a SAT formula satisfiable if and only if all graphs of @p graphs contain an accepting path of common length.
+ * Génère une formule SAT satisfaisable si et seulement si tous les graphes de graphs contiennent un chemin acceptant de longueur commune.
+ * 
+ * @param ctx, The solver context. Le contexte du solveur.
+ * @param graphs, An array of graphs. Une suite de graphes.
+ * @param numGraphs, The number of graphs in @p graphs. Le numéro (indice ?) du graphe dans graphs.
+ * @return Z3_ast, The formula. La formule.
+ */
 Z3_ast graphsToFullFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs){
     int commonLength = getMaxK(graphs,numGraphs);
-    /*
-    int commonLength = orderG(graphs[0]); //vérifier si ça ne commence pas à l'indice 1
-    for(int i = 1; i < numGraphs; i++){
-        commonLength = min(commonLength, orderG(graphs[i]));
-    }
-    */
-
-
-    //V1 (pas sûr, car prend les chemins de plusieurs tailles acceptantes)
     int index = 0;
     Z3_ast formulaOR[commonLength];
     for(int l = 1; l < commonLength; l++){
@@ -352,45 +398,20 @@ Z3_ast graphsToFullFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
     }
     Z3_ast x = Z3_mk_or(ctx,index,formulaOR);
     return x;
-    /*/
-
-    /*V2 (toujours pas sûr, je crois qu'il faut re-parcourir tout le modèle pour ne garder que les chemins acceptants, temoins de la solution, pas juste les chemins de taille solution) 
-    Z3_ast formulaOR[2];
-    int count = 0;
-    int index = 0;
-    Z3_model model = NULL;
-    printf("la\n");
-    for(int l = 1; l < commonLength; l++){
-        printf("la2\n");
-        //printf("test l = %d sur commonlength = %d\n",l,commonLength);
-        //printf("Formula k = %d, %s created.\n",l,Z3_ast_to_string(ctx,graphsToPathFormula(ctx, graphs, numGraphs, l)));
-        //printf("F = %d\n",isSatisfiable(isFormulaSat(ctx,graphsToPathFormula(ctx, graphs, numGraphs, l))));
-        if(isSatisfiable(isFormulaSat(ctx,graphsToPathFormula(ctx, graphs, numGraphs, l))) == 1){
-            printf("la3\n");
-            formulaOR[index] = graphsToPathFormula(ctx, graphs, numGraphs, l);
-            if(count == 1){
-                model = getModelFromSatFormula(ctx,Z3_mk_or(ctx,2,formulaOR));
-                if (getSolutionLengthFromModel(ctx,model,graphs) == l) index = 1-index;
-                else index = index;
-            }else{
-                count = 1;
-                index = 1;
-            }
-        }
-    }
-    printf("la4\n");
-    printf("index : %d\n",index);
-    return formulaOR[1-index];
-    */
-    //V3 :
-    // essayer de ne garder que les chemins témoins de la solution
 }
 
 
 
 
-// Affiche les chemins de longueur pathLength pour tous les graphes décrits dans model.
-
+/**
+ * @brief Small function printing the path for a graph
+ * 
+ * @param ctx, The solver context.
+ * @param model, A variable assignment.
+ * @param graph, A graph. 
+ * @param graphIndex,  The index of the graph in the array.
+ * @param pathLength, The length of path. La longueur du chemin.
+ */
 void oneGraphPrintPathsFromModel(Z3_context ctx, Z3_model model, Graph graph, int graphIndex, int pathLength){
     int tab[pathLength+1];
     for(int j = 0 ; j <= pathLength ; j++){
@@ -406,6 +427,16 @@ void oneGraphPrintPathsFromModel(Z3_context ctx, Z3_model model, Graph graph, in
     printf("%s;\n",getNodeName(graph,tab[pathLength]));
 }
 
+/**
+ * @brief Displays the paths of length @p pathLength of each graphs in @p graphs described by @p model.
+ * Affiche les chemins de longueur pathLength pour tous les graphes décrits dans model.
+ * 
+ * @param ctx, The solver context. 
+ * @param model, A variable assignment. 
+ * @param graphs, An array of graphs. 
+ * @param numGraph, The number of graphs in @p graphs. 
+ * @param pathLength, The length of path.
+ */
 void printPathsFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGraph, int pathLength){
     for(int i = 0 ; i < numGraph ; i++ ){
         printf("Chemin valide pour le graphe %d\n",i);
@@ -413,8 +444,16 @@ void printPathsFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numG
     }
 }
 
+/**
+ * @brief Small function returning the integers corresponding to the starting and ending nodes of the graph.
+ * 
+ * @param ctx, The solver context. 
+ * @param model, A variable assignment. 
+ * @param graphNumber, The index of the graph in the array.
+ * @param pathLength, The length of path.
+ * @param tab, The array in which we save the integers with the one for the starting node in the case 0 and the ending one in the case 1.
+ */
 void get_source_and_destination(Z3_context ctx, Z3_model model, Graph graph, int graphNumber, int pathLength, int * tab){
-    //int tab[2];
     for(int u = 0 ; u < orderG(graph) ; u++){
         if(valueOfVarInModel(ctx, model, getNodeVariable(ctx,graphNumber,0,pathLength,u))){
             tab[0] = u;
@@ -426,11 +465,20 @@ void get_source_and_destination(Z3_context ctx, Z3_model model, Graph graph, int
     return;
 }
 
-// Crée le fichier représentant la solution du problème décrit par model, ou ("result-l%d.dot,pathLength") si name == NULL
-
+/**
+ * @brief Creates the file ("%s-l%d.dot",name,pathLength) representing the solution to the problem described by @p model, or ("result-l%d.dot,pathLength") if name is NULL.
+ * Crée le fichier représentant la solution du problème décrit par model, ou ("result-l%d.dot,pathLength") si name == NULL
+ * 
+ * @param ctx, The solver context. Le contexte du solveur.
+ * @param model, A variable assignment. Une affectation de variables (exemple : x1 = Vrai, x2 = Faux, X3 = Vrai).
+ * @param graphs, An array of graphs. Une liste de graphes.
+ * @param numGraph, The number of graphs in @p graphs. Le nombre de graphes dans graphs.
+ * @param pathLength, The length of path. La longueur du chemin.
+ * @param name, The name of the output file. Le nom du fichier en sortie.
+ */
 void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGraph, int pathLength, char* name){
     // open the file for writing //
-    char* tmp = (char*)malloc(sizeof(char)*(13+strlen(name)+log10(pathLength))); //nombre magique
+    char* tmp = (char*)malloc(sizeof(char)*(13+strlen(name)+log10(pathLength))); 
     if(tmp == NULL){
         printf("Not enough memory to allocate tmp in createDotFromModel\n");
         exit(EXIT_FAILURE);
@@ -443,12 +491,12 @@ void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGr
     printf ("digraph %s{\n",name);
     for(int graphNumber = 0; graphNumber < numGraph; graphNumber++){
         int tab[2];
-        //Affichage des sommet de départ et d'arrivé.
+        // Display the starting and ending nodes.
         get_source_and_destination(ctx, model, graphs[graphNumber], graphNumber, pathLength, tab);
         printf ("_%d_%s [initial=1,color=green][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],tab[0]));
         printf ("_%d_%s [final=1,color=red][style=filled,fillcolor=lightblue];\n",graphNumber,getNodeName(graphs[graphNumber],tab[1]));
         int numNode = orderG(graphs[graphNumber]);
-        //Affichage de tous les autres sommets, avec du 'lightblue' pour les sommet parcourus.
+        // Display every other nodes with the one in the path in 'light-blue'.
         for(int ind = 0 ; ind < numNode ; ind++ ){
             if(!isTarget(graphs[graphNumber],ind) && !isSource(graphs[graphNumber],ind)){
                 bool used = false;
@@ -465,7 +513,7 @@ void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGr
                 }
             }
         }
-        //Affichage de tous les arcs, avec du 'blue' pour les arcs parcourus
+        // Display every edges with the ones in the path in 'blue'.
         for(int u = 0 ; u < numNode ; u++ ){
             for(int v = 0 ; v < numNode ; v++ ){
                 if(isEdge(graphs[graphNumber],u,v)){
@@ -484,24 +532,11 @@ void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGr
                 }
             }
         }
-        /* Pas nécessaire
-        printf ("_%d_",graphNumber);
-        oneGraphPrintPathsFromModel(ctx, model, graphs[graphNumber], graphNumber, pathLength);
-        */
     }
     printf ("}\n");
     dup2(save_out, STDOUT_FILENO);
     close(fp);
 }
-
-/* Détails nécessaire pour avoir le même .dot que les prof
-Pour tout les graphes :
-
-    Afficher départ et arrivée OK
-    Afficher tous les autres sommets (les sommets du chemin sont en 'lightblue')
-    Afficher tous les arcs (les arcs du chemin sont en 'blue')
-
-*/
 
 #endif
 

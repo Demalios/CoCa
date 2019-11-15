@@ -24,6 +24,15 @@ bool DEFAULT_DISP_o = false;
 char DEFAULT_FILE_NAME[MAX_NAME_LENGTH] = "result";
 int numArg = 1;
 
+/**
+ * @brief A function testing if the given formula is SAT and will apply the different option given.
+ * 
+ * @param ctx, The solver context.
+ * @param formula, A Z3_ast formula
+ * @param graphs, An array of graphs.
+ * @param numGraph, The number of graphs in @p graphs.
+ * @return A boolean indicating if the formula was SAT or not.
+ */
 bool SAT(Z3_context ctx, Z3_ast formula, Graph * graphs, int numGraph){
     if(formula==NULL){
         printf("Non\n");
@@ -153,36 +162,6 @@ int main(int argc, char* argv[]){
         Z3_ast formula = graphsToFullFormula(ctx,graph,numGraph);
         SAT(ctx,formula,graph,numGraph);
     }
-    /*
-    Z3_lbool isSat = isFormulaSat(ctx,formula);
-    switch (isSat){
-        case Z3_L_FALSE:
-            printf("Non\n");
-            break;
-
-        case Z3_L_UNDEF:
-            printf("We don't know if %s is satisfiable.\n",Z3_ast_to_string(ctx,formula));
-            break;
-
-        case Z3_L_TRUE:
-            if(DEFAULT_DISP_F){
-                printf("%s \n",Z3_ast_to_string(ctx,formula));
-            }
-            printf("Oui\n");
-            
-            if(DEFAULT_DISP_P){
-                Z3_model model = getModelFromSatFormula( ctx, formula);
-                int k = getSolutionLengthFromModel(ctx,model,graph);
-                printPathsFromModel( ctx, model, graph, numGraph, k);
-            }
-            if(DEFAULT_DISP_f){
-                Z3_model model = getModelFromSatFormula(ctx, formula);
-                int k = getSolutionLengthFromModel(ctx,model,graph);
-                createDotFromModel(ctx, model, graph, numGraph, k, "result");
-            }
-            break;
-    }
-    */
     for(int i = 0 ; i < numGraph ; i++){
         deleteGraph(graph[i]);
     }
