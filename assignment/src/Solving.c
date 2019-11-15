@@ -70,12 +70,12 @@ int getMaxK(Graph * graph, int numGraph){
  * @brief Generates a formula consisting of a variable representing the fact that @p node of graph number @p number is at position @p position of an accepting path.
  * Génère une formule consistant en une variable représentant le fait que node du graphe number soit à la position position d'un chemin acceptant.
  * 
- * @param ctx, The solver context. Le contexte du solveur.
- * @param number, The number of the graph. Le numéro du graphe.
- * @param position, The position in the path. La position du chemin.
- * @param k, The mysterious k from the subject of this assignment. Le k dans x_i,j,k,q.
- * @param node, The node identifier. L'identifiant du noeud.
- * @return Z3_ast, The formula. La formule.
+ * @param ctx, The solver context. 
+ * @param number, The number of the graph. 
+ * @param position, The position in the path. 
+ * @param k, The mysterious k from the subject of this assignment.
+ * @param node, The node identifier.
+ * @return Z3_ast, The formula.
  */
 Z3_ast getNodeVariable(Z3_context ctx, int number, int position, int k, int node){
     char* str = (char*)malloc(sizeof(char)*(int)ceil(10+log10(max(number,1))+log10(max(position,1))+log10(max(k,1))+log10(max(node,1))));
@@ -175,6 +175,7 @@ Z3_ast graphToPhi4Formula(Z3_context ctx, Graph *graphs, unsigned int i, int pat
             }
             int AND3index = 0;
             Z3_ast* formulaOR = (Z3_ast*)malloc(sizeof(Z3_ast)*2);
+            Z3_ast formulaOR[2];
             if(formulaOR == NULL){
                 printf("Not enough memory to allocate formulaOR in Phi4\n");
                 exit(EXIT_FAILURE);
@@ -380,10 +381,10 @@ int getSolutionLengthFromModel(Z3_context ctx, Z3_model model, Graph *graphs){
  * @brief Generates a SAT formula satisfiable if and only if all graphs of @p graphs contain an accepting path of common length.
  * Génère une formule SAT satisfaisable si et seulement si tous les graphes de graphs contiennent un chemin acceptant de longueur commune.
  * 
- * @param ctx, The solver context. Le contexte du solveur.
- * @param graphs, An array of graphs. Une suite de graphes.
- * @param numGraphs, The number of graphs in @p graphs. Le numéro (indice ?) du graphe dans graphs.
- * @return Z3_ast, The formula. La formule.
+ * @param ctx, The solver context.
+ * @param graphs, An array of graphs.
+ * @param numGraphs, The number of graphs in @p graphs. 
+ * @return Z3_ast, The formula.
  */
 Z3_ast graphsToFullFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs){
     int commonLength = getMaxK(graphs,numGraphs);
@@ -410,7 +411,7 @@ Z3_ast graphsToFullFormula(Z3_context ctx, Graph *graphs, unsigned int numGraphs
  * @param model, A variable assignment.
  * @param graph, A graph. 
  * @param graphIndex,  The index of the graph in the array.
- * @param pathLength, The length of path. La longueur du chemin.
+ * @param pathLength, The length of path. 
  */
 void oneGraphPrintPathsFromModel(Z3_context ctx, Z3_model model, Graph graph, int graphIndex, int pathLength){
     int tab[pathLength+1];
@@ -469,12 +470,12 @@ void get_source_and_destination(Z3_context ctx, Z3_model model, Graph graph, int
  * @brief Creates the file ("%s-l%d.dot",name,pathLength) representing the solution to the problem described by @p model, or ("result-l%d.dot,pathLength") if name is NULL.
  * Crée le fichier représentant la solution du problème décrit par model, ou ("result-l%d.dot,pathLength") si name == NULL
  * 
- * @param ctx, The solver context. Le contexte du solveur.
- * @param model, A variable assignment. Une affectation de variables (exemple : x1 = Vrai, x2 = Faux, X3 = Vrai).
- * @param graphs, An array of graphs. Une liste de graphes.
- * @param numGraph, The number of graphs in @p graphs. Le nombre de graphes dans graphs.
- * @param pathLength, The length of path. La longueur du chemin.
- * @param name, The name of the output file. Le nom du fichier en sortie.
+ * @param ctx, The solver context.
+ * @param model, A variable assignment. 
+ * @param graphs, An array of graphs.
+ * @param numGraph, The number of graphs in @p graphs. 
+ * @param pathLength, The length of path. 
+ * @param name, The name of the output file. 
  */
 void createDotFromModel(Z3_context ctx, Z3_model model, Graph *graphs, int numGraph, int pathLength, char* name){
     // open the file for writing //
